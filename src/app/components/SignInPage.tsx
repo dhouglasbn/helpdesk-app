@@ -2,13 +2,9 @@ import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import type { Page, User } from '@/app/App';
+import { Link } from 'react-router-dom'
 
-const { Title, Paragraph, Link } = Typography;
-
-interface SignInPageProps {
-  onNavigate: (page: Page) => void;
-  onSignIn: (user: User) => void;
-}
+const { Title, Paragraph } = Typography;
 
 // Mock users for demonstration
 const mockUsers: User[] = [
@@ -17,7 +13,7 @@ const mockUsers: User[] = [
   { id: '3', name: 'Admin User', email: 'admin@example.com', role: 'admin', phone: '11977777777' },
 ];
 
-export default function SignInPage({ onNavigate, onSignIn }: SignInPageProps) {
+export default function SignInPage() {
   const [loading, setLoading] = useState(false);
 
   const onFinish = (values: { email: string; password: string }) => {
@@ -87,10 +83,10 @@ export default function SignInPage({ onNavigate, onSignIn }: SignInPageProps) {
         <div className="text-center mt-6">
           <Paragraph>
             Não tem uma conta?{' '}
-            <Link onClick={() => onNavigate('signup')}>Cadastre-se</Link>
+            <Link to='/signUp'>Cadastre-se</Link>
           </Paragraph>
           <Paragraph>
-            <Link onClick={() => onNavigate('landing')}>Voltar para início</Link>
+            <Link to="/">Voltar para início</Link>
           </Paragraph>
         </div>
 

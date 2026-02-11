@@ -1,20 +1,35 @@
 import { useState } from 'react';
+import { z } from 'zod'
 import { Form, Input, Button, Card, Typography, message, Upload, Avatar } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, HomeOutlined, CameraOutlined } from '@ant-design/icons';
 import ImgCrop from 'antd-img-crop';
-import type { UploadProps, UploadFile } from 'antd';
+import { useCreateClient } from '../../http/use-create-client';
+import type { UploadProps } from 'antd';
 import type { Page } from '@/app/App';
+import { Link, useNavigate } from 'react-router-dom'
 
-const { Title, Paragraph, Link } = Typography;
+const { Title, Paragraph } = Typography;
 
-interface SignUpPageProps {
-  onNavigate: (page: Page) => void;
-}
 
-export default function SignUpPage({ onNavigate }: SignUpPageProps) {
-  const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>('');
-  const [form] = Form.useForm();
+const createClientSchema = z.object({
+			name: z.string().min(3),
+			email: z.email(),
+			password: z.string().min(6),
+			phone: z.string().min(10),
+			address: z.string().min(5),
+		})
+
+type CreateClientFormData = z.infer<typeof createClientSchema>
+
+export default function SignUpPage() {
+  const { 
+    isPending,
+    mutateAsync: createClient
+  } = useCreateClient();
+  const navigate = useNavigate();
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [form] = Form.useForm<CreateClientFormData>();
 
   const uploadProps: UploadProps = {
     name: 'avatar',
@@ -26,35 +41,44 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
         message.error('Você só pode enviar arquivos de imagem!');
         return Upload.LIST_IGNORE;
       }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
+      const isLowerThan5MB = file.size / 1024 / 1024 < 5;
+      if (!isLowerThan5MB) {
         message.error('A imagem deve ter menos de 5MB!');
         return Upload.LIST_IGNORE;
       }
       
       // Preview the image
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        setImageUrl(reader.result as string);
-      });
-      reader.readAsDataURL(file);
+      setAvatarFile(file)
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+
       
       return false; // Prevent auto upload
     },
     onRemove: () => {
-      setImageUrl('');
-    },
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl('');
+      setAvatarFile(null);
+},
   };
 
-  const onFinish = (values: any) => {
-    setLoading(true);
+  const handleCreateClient = async ({
+    name,
+    email,
+    password,
+    phone,
+    address
+  }: CreateClientFormData) => {
     
-    // Simulate API call
-    setTimeout(() => {
-      message.success('Conta criada com sucesso! Faça login para continuar.');
-      setLoading(false);
-      onNavigate('signin');
-    }, 1000);
+    await createClient({
+      name,
+      email,
+      password,
+      phone,
+      address
+    });
+    form.resetFields()
+    navigate('/signIn')
   };
 
   return (
@@ -68,7 +92,7 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
         <Form
           form={form}
           name="signup"
-          onFinish={onFinish}
+          onFinish={handleCreateClient}
           layout="vertical"
           size="large"
         >
@@ -81,9 +105,7 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
           >
             <div className="flex flex-col items-center gap-4">
               <ImgCrop
-                rotationSlider
                 quality={1}
-                aspectSlider
                 showReset
                 modalTitle="Editar Foto de Perfil"
                 modalOk="Confirmar"
@@ -92,16 +114,13 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
               >
                 <Upload {...uploadProps}>
                   <div className="relative cursor-pointer group">
-                    {imageUrl ? (
+                    {avatarFile ? (
                       <div className="relative">
                         <Avatar
                           size={150}
-                          src={imageUrl}
+                          src={previewUrl}
                           className="border-4 border-dashed border-blue-400 transition-all group-hover:border-blue-600"
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all flex items-center justify-center">
-                          <CameraOutlined className="text-white text-2xl opacity-0 group-hover:opacity-100 transition-all" />
-                        </div>
                       </div>
                     ) : (
                       <div className="w-[150px] h-[150px] rounded-full border-4 border-dashed border-gray-300 hover:border-blue-500 transition-all flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50">
@@ -204,7 +223,7 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
+            <Button type="primary" htmlType="submit" block loading={isPending}>
               Criar Conta
             </Button>
           </Form.Item>
@@ -213,10 +232,10 @@ export default function SignUpPage({ onNavigate }: SignUpPageProps) {
         <div className="text-center mt-6">
           <Paragraph>
             Já tem uma conta?{' '}
-            <Link onClick={() => onNavigate('signin')}>Entrar</Link>
+            <Link to='/signIn'>Entrar</Link>
           </Paragraph>
           <Paragraph>
-            <Link onClick={() => onNavigate('landing')}>Voltar para início</Link>
+            <Link to='/'>Voltar para início</Link>
           </Paragraph>
         </div>
       </Card>

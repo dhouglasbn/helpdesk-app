@@ -1,14 +1,11 @@
 import { Button, Card, Row, Col, Typography } from 'antd';
 import { CustomerServiceOutlined, ToolOutlined, TeamOutlined, SafetyOutlined } from '@ant-design/icons';
 import type { Page } from '@/app/App';
+import { Link } from 'react-router-dom';
 
 const { Title, Paragraph } = Typography;
 
-interface LandingPageProps {
-  onNavigate: (page: Page) => void;
-}
-
-export default function LandingPage({ onNavigate }: LandingPageProps) {
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2]">
       {/* Hero Section */}
@@ -20,21 +17,23 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           Sistema completo de gestão de tickets para conectar clientes, técnicos e administradores
         </Paragraph>
         <div className="flex gap-4 justify-center flex-wrap">
-          <Button 
-            type="primary" 
-            size="large" 
-            onClick={() => onNavigate('signup')} 
-            className="!min-w-[150px] !h-12 !text-base"
-          >
-            Criar Conta
-          </Button>
-          <Button 
-            size="large" 
-            onClick={() => onNavigate('signin')} 
-            className="!min-w-[150px] !h-12 !text-base !bg-white"
-          >
-            Entrar
-          </Button>
+          <Link to="/signUp">
+            <Button 
+              type="primary" 
+              size="large" 
+              className="!min-w-[150px] !h-12 !text-base"
+            >
+              Criar Conta
+            </Button>
+          </Link>
+          <Link to="/signIn">
+            <Button 
+              size="large" 
+              className="!min-w-[150px] !h-12 !text-base !bg-white"
+            >
+              Entrar
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -7,82 +7,24 @@ import SignUpPage from '@/app/components/SignUpPage';
 import ClientDashboard from '@/app/components/ClientDashboard';
 import TechnicianDashboard from '@/app/components/TechnicianDashboard';
 import AdminDashboard from '@/app/components/AdminDashboard';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-export type UserRole = 'client' | 'technician' | 'admin' | null;
-
-export type Page = 'landing' | 'signin' | 'signup' | 'client-dashboard' | 'technician-dashboard' | 'admin-dashboard';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'client' | 'technician' | 'admin';
-  phone?: string;
-  address?: string;
-}
-
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  active: boolean;
-}
-
-export interface Ticket {
-  id: string;
-  clientId: string;
-  technicianId: string;
-  services: string[];
-  status: 'Aberto' | 'Em atendimento' | 'Encerrado';
-  createdAt: string;
-  description: string;
-}
+const queryClient = new QueryClient();
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('landing');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  const handleNavigate = (page: Page) => {
-    setCurrentPage(page);
-  };
-
-  const handleSignIn = (user: User) => {
-    setCurrentUser(user);
-    if (user.role === 'client') {
-      setCurrentPage('client-dashboard');
-    } else if (user.role === 'technician') {
-      setCurrentPage('technician-dashboard');
-    } else if (user.role === 'admin') {
-      setCurrentPage('admin-dashboard');
-    }
-  };
-
-  const handleSignOut = () => {
-    setCurrentUser(null);
-    setCurrentPage('landing');
-  };
-
   return (
-    <div className="app">
-      {currentPage === 'landing' && (
-        <LandingPage onNavigate={handleNavigate} />
-      )}
-      {currentPage === 'signin' && (
-        <SignInPage onNavigate={handleNavigate} onSignIn={handleSignIn} />
-      )}
-      {currentPage === 'signup' && (
-        <SignUpPage onNavigate={handleNavigate} />
-      )}
-      {currentPage === 'client-dashboard' && currentUser && (
-        <ClientDashboard user={currentUser} onSignOut={handleSignOut} />
-      )}
-      {currentPage === 'technician-dashboard' && currentUser && (
-        <TechnicianDashboard user={currentUser} onSignOut={handleSignOut} />
-      )}
-      {currentPage === 'admin-dashboard' && currentUser && (
-        <AdminDashboard user={currentUser} onSignOut={handleSignOut} />
-      )}
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<LandingPage />} index />
+          <Route element={<SignInPage />} path="/signIn" />
+          <Route element={<SignUpPage />} path="/signUp" />
+          <Route element={<ClientDashboard />} path="/clientDashboard" />
+          <Route element={<TechnicianDashboard />} path="/techDashboard" />
+          <Route element={<AdminDashboard />} path="/adminDashboard" />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

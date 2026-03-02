@@ -9,6 +9,7 @@ import TechnicianDashboard from '@/app/components/TechnicianDashboard';
 import AdminDashboard from '@/app/components/AdminDashboard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './components/context/UserContext';
 
 const queryClient = new QueryClient();
 
@@ -16,14 +17,16 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route element={<LandingPage />} index />
-          <Route element={<SignInPage />} path="/signIn" />
-          <Route element={<SignUpPage />} path="/signUp" />
-          <Route element={<ClientDashboard />} path="/clientDashboard" />
-          <Route element={<TechnicianDashboard />} path="/techDashboard" />
-          <Route element={<AdminDashboard />} path="/adminDashboard" />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route element={<LandingPage />} index />
+            <Route element={<SignInPage />} path="/signIn" />
+            <Route element={<SignUpPage />} path="/signUp" />
+            <Route element={<ClientDashboard />} path="/clientDashboard" />
+            <Route element={<TechnicianDashboard />} path="/techDashboard" />
+            <Route element={<AdminDashboard />} path="/adminDashboard" />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

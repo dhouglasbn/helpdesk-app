@@ -1,41 +1,48 @@
-import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import type { Page, User } from '@/app/App';
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify';
+import { useLogin } from '../../http/use-login';
+import z from 'zod';
+import Cookies from 'js-cookie'
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './context/UserContext';
+import { useEffect } from 'react';
 
 const { Title, Paragraph } = Typography;
+const loginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(6)
+})
 
-// Mock users for demonstration
-const mockUsers: User[] = [
-  { id: '1', name: 'João Silva', email: 'client@example.com', role: 'client', phone: '11999999999', address: 'Rua A, 123' },
-  { id: '2', name: 'Maria Santos', email: 'tech@example.com', role: 'technician', phone: '11988888888' },
-  { id: '3', name: 'Admin User', email: 'admin@example.com', role: 'admin', phone: '11977777777' },
-];
+type LoginFormData = z.infer<typeof loginSchema>
 
 export default function SignInPage() {
-  const [loading, setLoading] = useState(false);
+  const { isPending, mutateAsync: login } = useLogin();
+  const navigate = useNavigate();
+  const [form] = Form.useForm<LoginFormData>();
+  const queryClient = useQueryClient();
+  const { user, loading } = useAuth();
 
-  const onFinish = (values: { email: string; password: string }) => {
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(u => u.email === values.email);
-      
-      if (user && values.password === 'password') {
-        message.success('Login realizado com sucesso!');
-        onSignIn(user);
-      } else {
-        message.error('Email ou senha incorretos');
-      }
-      
-      setLoading(false);
-    }, 500);
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return;
+    navigate(`/${user.role}Dashboard`)
+  }, [user, loading, navigate])
+
+  const handleLogin = async ({ email, password }: LoginFormData) => {
+    const { token } = await login({email, password});
+    Cookies.set("access_token", token, {
+      expires: 1,
+      sameSite: "Strict"
+    })
+
+    await queryClient.invalidateQueries({ queryKey: ["me"]})
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] px-6">
+      <ToastContainer />
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <Title level={2} className="!mb-2">Entrar</Title>
@@ -43,8 +50,9 @@ export default function SignInPage() {
         </div>
 
         <Form
+          form={form}
           name="signin"
-          onFinish={onFinish}
+          onFinish={handleLogin}
           layout="vertical"
           size="large"
         >
@@ -65,7 +73,10 @@ export default function SignInPage() {
           <Form.Item
             name="password"
             label="Senha"
-            rules={[{ required: true, message: 'Por favor, insira sua senha' }]}
+            rules={[
+              { required: true, message: 'Por favor, insira sua senha' },
+              { min: 6, message: 'A senha deve ter pelo menos 6 caracteres' }
+            ]}
           >
             <Input.Password 
               prefix={<LockOutlined />} 
@@ -74,7 +85,7 @@ export default function SignInPage() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
+            <Button type="primary" htmlType="submit" block loading={isPending}>
               Entrar
             </Button>
           </Form.Item>
@@ -89,22 +100,6 @@ export default function SignInPage() {
             <Link to="/">Voltar para início</Link>
           </Paragraph>
         </div>
-
-        <Card size="small" className="mt-6 bg-gray-50">
-          <Title level={5} className="!mb-3">Contas de Teste:</Title>
-          <Paragraph className="!text-xs !mb-1">
-            <strong>Cliente:</strong> client@example.com
-          </Paragraph>
-          <Paragraph className="!text-xs !mb-1">
-            <strong>Técnico:</strong> tech@example.com
-          </Paragraph>
-          <Paragraph className="!text-xs !mb-1">
-            <strong>Admin:</strong> admin@example.com
-          </Paragraph>
-          <Paragraph className="!text-xs !mb-0">
-            <strong>Senha:</strong> password
-          </Paragraph>
-        </Card>
       </Card>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Space } from 'antd';
 import { 
   LogoutOutlined, 
@@ -7,15 +7,18 @@ import {
   PlusOutlined,
   EditOutlined
 } from '@ant-design/icons';
-import type { User, Service, Ticket } from '@/app/App';
+import type { Service, Ticket } from '@/app/App';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './context/UserContext';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
-
-interface TechnicianDashboardProps {
-  user: User;
-  onSignOut: () => void;
+const user = { id: '2',
+  name: 'Maria Santos',
+  email: 'tech@example.com',
+  role: 'tech',
+  phone: '11988888888'
 }
 
 // Mock data
@@ -70,7 +73,9 @@ const mockTickets: Ticket[] = [
   },
 ];
 
-export default function TechnicianDashboard({ user, onSignOut }: TechnicianDashboardProps) {
+export default function TechnicianDashboard() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
@@ -80,6 +85,10 @@ export default function TechnicianDashboard({ user, onSignOut }: TechnicianDashb
   const [serviceForm] = Form.useForm();
   const [statusForm] = Form.useForm();
   const [profileForm] = Form.useForm();
+
+  useEffect(() => {
+      if (!user) navigate("/", { replace: true })
+  }, [user, navigate])
 
   const getServiceById = (id: string) => mockServices.find(s => s.id === id);
   const getClientById = (id: string) => mockClients.find(c => c.id === id);
@@ -226,7 +235,7 @@ export default function TechnicianDashboard({ user, onSignOut }: TechnicianDashb
           type="primary" 
           danger 
           icon={<LogoutOutlined />} 
-          onClick={onSignOut}
+          onClick={logout}
         >
           Sair
         </Button>
@@ -262,7 +271,7 @@ export default function TechnicianDashboard({ user, onSignOut }: TechnicianDashb
                 
                 <Table 
                   columns={columns} 
-                  dataSource={tickets.filter(t => t.technicianId === user.id)} 
+                  dataSource={tickets.filter(t => t.technicianId === user?.id)} 
                   rowKey="id"
                   pagination={{ pageSize: 10 }}
                 />
@@ -379,10 +388,12 @@ export default function TechnicianDashboard({ user, onSignOut }: TechnicianDashb
                 
                 <Card>
                   <Descriptions title="Informações Pessoais" bordered column={1}>
-                    <Descriptions.Item label="Nome">{user.name}</Descriptions.Item>
-                    <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
-                    <Descriptions.Item label="Telefone">{user.phone || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
+                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
+                    <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
                     <Descriptions.Item label="Função">Técnico</Descriptions.Item>
+                    <Descriptions.Item label="Disponibilidades">{`[${user?.availabilities}]`}</Descriptions.Item>
                   </Descriptions>
                   
                   <div className="mt-6">

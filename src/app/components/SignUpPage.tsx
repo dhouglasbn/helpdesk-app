@@ -7,6 +7,7 @@ import { useCreateClient } from '../../http/use-create-client';
 import type { UploadProps } from 'antd';
 import type { Page } from '@/app/App';
 import { Link, useNavigate } from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify';
 
 const { Title, Paragraph } = Typography;
 
@@ -83,6 +84,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] px-6 py-8">
+      <ToastContainer />
       <Card className="w-full max-w-lg">
         <div className="text-center mb-8">
           <Title level={2} className="!mb-2">Criar Conta</Title>

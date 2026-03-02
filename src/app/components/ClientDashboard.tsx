@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Popconfirm } from 'antd';
 import { 
   LogoutOutlined, 
@@ -9,16 +9,14 @@ import {
   DollarOutlined
 } from '@ant-design/icons';
 import type { User, Service, Ticket } from '@/app/App';
+import { useAuth } from './context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface ClientDashboardProps {
-  user: User;
-  onSignOut: () => void;
-}
 
 // Mock data
 const mockServices: Service[] = [
@@ -59,13 +57,19 @@ const mockTickets: Ticket[] = [
   },
 ];
 
-export default function ClientDashboard({ user, onSignOut }: ClientDashboardProps) {
+export default function ClientDashboard() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
   const [form] = Form.useForm();
   const [profileForm] = Form.useForm();
+
+  useEffect(() => {
+    if (!user) navigate("/", { replace: true })
+  }, [user, navigate])
 
   const activeServices = mockServices.filter(s => s.active);
 
@@ -81,7 +85,7 @@ export default function ClientDashboard({ user, onSignOut }: ClientDashboardProp
   const handleCreateTicket = (values: any) => {
     const newTicket: Ticket = {
       id: String(tickets.length + 1),
-      clientId: user.id,
+      clientId: user?.id,
       technicianId: '2',
       services: values.services,
       status: 'Aberto',
@@ -101,8 +105,6 @@ export default function ClientDashboard({ user, onSignOut }: ClientDashboardProp
   };
 
   const handleDeleteAccount = () => {
-    message.success('Conta excluída com sucesso!');
-    setTimeout(() => onSignOut(), 1000);
   };
 
   const columns = [
@@ -163,7 +165,7 @@ export default function ClientDashboard({ user, onSignOut }: ClientDashboardProp
           type="primary" 
           danger 
           icon={<LogoutOutlined />} 
-          onClick={onSignOut}
+          onClick={logout}
         >
           Sair
         </Button>
@@ -289,10 +291,10 @@ export default function ClientDashboard({ user, onSignOut }: ClientDashboardProp
                 
                 <Card>
                   <Descriptions title="Informações Pessoais" bordered column={1}>
-                    <Descriptions.Item label="Nome">{user.name}</Descriptions.Item>
-                    <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
-                    <Descriptions.Item label="Telefone">{user.phone || 'Não informado'}</Descriptions.Item>
-                    <Descriptions.Item label="Endereço">{user.address || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
+                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
+                    <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
                     <Descriptions.Item label="Função">Cliente</Descriptions.Item>
                   </Descriptions>
                   

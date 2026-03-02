@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
 import { 
   LogoutOutlined, 
@@ -11,16 +11,13 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import type { User, Service, Ticket } from '@/app/App';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './context/UserContext';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-
-interface AdminDashboardProps {
-  user: User;
-  onSignOut: () => void;
-}
 
 // Mock data
 const mockTechnicians: User[] = [
@@ -71,12 +68,18 @@ const mockTickets: Ticket[] = [
   },
 ];
 
-export default function AdminDashboard({ user, onSignOut }: AdminDashboardProps) {
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const {user, logout} = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('technicians');
   const [technicians, setTechnicians] = useState<User[]>(mockTechnicians);
   const [clients, setClients] = useState<User[]>(mockClients);
   const [services, setServices] = useState<Service[]>(mockServices);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
+
+  useEffect(() => {
+      if (!user) navigate("/", { replace: true })
+    }, [user, navigate])
   
   const [isTechModalOpen, setIsTechModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -336,7 +339,7 @@ export default function AdminDashboard({ user, onSignOut }: AdminDashboardProps)
           type="primary" 
           danger 
           icon={<LogoutOutlined />} 
-          onClick={onSignOut}
+          onClick={logout}
         >
           Sair
         </Button>
@@ -579,9 +582,10 @@ export default function AdminDashboard({ user, onSignOut }: AdminDashboardProps)
                 
                 <Card>
                   <Descriptions title="Informações Pessoais" bordered column={1}>
-                    <Descriptions.Item label="Nome">{user.name}</Descriptions.Item>
-                    <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
-                    <Descriptions.Item label="Telefone">{user.phone || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
+                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
+                    <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
+                    <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
                     <Descriptions.Item label="Função">Administrador</Descriptions.Item>
                   </Descriptions>
                   

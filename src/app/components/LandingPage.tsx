@@ -1,11 +1,18 @@
 import { Button, Card, Row, Col, Typography } from 'antd';
 import { CustomerServiceOutlined, ToolOutlined, TeamOutlined, SafetyOutlined } from '@ant-design/icons';
-import type { Page } from '@/app/App';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/UserContext';
+import { useEffect } from 'react';
 
 const { Title, Paragraph } = Typography;
 
 export default function LandingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) navigate(`/${user.role}Dashboard`)
+  }, [user, navigate])
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2]">
       {/* Hero Section */}

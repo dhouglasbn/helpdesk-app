@@ -1,7 +1,7 @@
 import { Button, Card, Row, Col, Typography } from 'antd';
 import { CustomerServiceOutlined, ToolOutlined, TeamOutlined, SafetyOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './context/UserContext';
+import { useAuth } from '../context/UserContext';
 import { useEffect } from 'react';
 
 const { Title, Paragraph } = Typography;
@@ -13,6 +13,33 @@ export default function LandingPage() {
   useEffect(() => {
     if (user) navigate(`/${user.role}Dashboard`)
   }, [user, navigate])
+
+  const features = [
+  {
+    id: 0,
+    icon: <CustomerServiceOutlined className="text-5xl text-[#667eea] mb-4" />,
+    title: "Para Clientes",
+    description: "Crie e acompanhe seus tickets de suporte de forma simples e rápida",
+  },
+  {
+    id: 1,
+    icon: <ToolOutlined className="text-5xl text-[#667eea] mb-4" />,
+    title: "Para Técnicos",
+    description: "Gerencie tickets atribuídos, adicione serviços e atualize status",
+  },
+  {
+    id: 2,
+    icon: <TeamOutlined className="text-5xl text-[#667eea] mb-4" />,
+    title: "Para Administradores",
+    description: "Controle total sobre usuários, serviços e todos os tickets",
+  },
+  {
+    id: 3,
+    icon: <SafetyOutlined className="text-5xl text-[#667eea] mb-4" />,
+    title: "Seguro e Confiável",
+    description: "Sistema robusto com controle de permissões por função",
+  },
+];
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2]">
       {/* Hero Section */}
@@ -51,34 +78,15 @@ export default function LandingPage() {
             Funcionalidades
           </Title>
           <Row gutter={[32, 32]}>
-            <Col xs={24} sm={12} lg={6}>
-              <Card hoverable className="text-center h-full">
-                <CustomerServiceOutlined className="text-5xl text-[#667eea] mb-4" />
-                <Title level={4}>Para Clientes</Title>
-                <Paragraph>Crie e acompanhe seus tickets de suporte de forma simples e rápida</Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card hoverable className="text-center h-full">
-                <ToolOutlined className="text-5xl text-[#667eea] mb-4" />
-                <Title level={4}>Para Técnicos</Title>
-                <Paragraph>Gerencie tickets atribuídos, adicione serviços e atualize status</Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card hoverable className="text-center h-full">
-                <TeamOutlined className="text-5xl text-[#667eea] mb-4" />
-                <Title level={4}>Para Administradores</Title>
-                <Paragraph>Controle total sobre usuários, serviços e todos os tickets</Paragraph>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card hoverable className="text-center h-full">
-                <SafetyOutlined className="text-5xl text-[#667eea] mb-4" />
-                <Title level={4}>Seguro e Confiável</Title>
-                <Paragraph>Sistema robusto com controle de permissões por função</Paragraph>
-              </Card>
-            </Col>
+            {features.map((feature) => (
+              <Col key={feature.id} xs={24} sm={12} lg={6}>
+                <Card hoverable className="text-center h-full">
+                  {feature.icon}
+                  <Title level={4}>{feature.title}</Title>
+                  <Paragraph>{feature.description}</Paragraph>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
       </div>

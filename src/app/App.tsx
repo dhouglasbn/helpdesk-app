@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import 'antd/dist/reset.css';
 import '@/styles/app.css';
-import LandingPage from '@/app/components/LandingPage';
-import SignInPage from '@/app/components/SignInPage';
-import SignUpPage from '@/app/components/SignUpPage';
-import ClientDashboard from '@/app/components/ClientDashboard';
-import TechnicianDashboard from '@/app/components/TechnicianDashboard';
-import AdminDashboard from '@/app/components/AdminDashboard';
+import LandingPage from '@/app/pages/LandingPage';
+import SignInPage from '@/app/pages/SignInPage';
+import SignUpPage from '@/app/pages/SignUpPage';
+import ClientDashboard from '@/app/pages/ClientDashboard';
+import TechnicianDashboard from '@/app/pages/TechnicianDashboard';
+import AdminDashboard from '@/app/pages/AdminDashboard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './components/context/UserContext';
+import { AuthProvider } from './context/UserContext';
 
 const queryClient = new QueryClient();
 

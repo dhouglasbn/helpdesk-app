@@ -1,8 +1,8 @@
 import { type PropsWithChildren, createContext, useContext, useEffect } from "react";
-import { useMe } from "../../../http/use-me";
+import { useMe } from "../../http/use-me";
 import { useQueryClient } from "@tanstack/react-query";
 import Cookies from 'js-cookie'
-import type { UserData } from "../../../http/types/userData";
+import type { UserData } from "../../http/types/userData";
 import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {

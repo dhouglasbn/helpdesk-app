@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
+import { Layout, Menu, Button, Table, Tag, Modal, Form, Input, Select, Typography, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
 import { 
-  LogoutOutlined, 
   UserOutlined, 
   FileTextOutlined,
   ToolOutlined,
@@ -12,7 +11,9 @@ import {
 } from '@ant-design/icons';
 import type { User, Service, Ticket } from '@/app/App';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './context/UserContext';
+import { useAuth } from '../context/UserContext';
+import { LogoutButton } from '../components/logout-button';
+import { UserProfile } from '../components/user-profile';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -70,7 +71,7 @@ const mockTickets: Ticket[] = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const {user, logout} = useAuth();
+  const {user} = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('technicians');
   const [technicians, setTechnicians] = useState<User[]>(mockTechnicians);
   const [clients, setClients] = useState<User[]>(mockClients);
@@ -78,18 +79,16 @@ export default function AdminDashboard() {
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
   useEffect(() => {
-      if (!user) navigate("/", { replace: true })
-    }, [user, navigate])
+    if (!user || user?.role !== "admin") navigate("/", { replace: true })
+  }, [user, navigate])
   
   const [isTechModalOpen, setIsTechModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [editingTech, setEditingTech] = useState<User | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   
   const [techForm] = Form.useForm();
   const [serviceForm] = Form.useForm();
-  const [profileForm] = Form.useForm();
 
   const getServiceById = (id: string) => services.find(s => s.id === id);
   const getClientById = (id: string) => clients.find(c => c.id === id);
@@ -157,11 +156,6 @@ export default function AdminDashboard() {
   const handleDeleteClient = (id: string) => {
     setClients(clients.filter(c => c.id !== id));
     message.success('Cliente excluído com sucesso!');
-  };
-
-  const handleUpdateProfile = (values: any) => {
-    message.success('Perfil atualizado com sucesso!');
-    setIsEditProfileModalOpen(false);
   };
 
   // Table columns
@@ -335,14 +329,7 @@ export default function AdminDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro - Admin</Title>
-        <Button 
-          type="primary" 
-          danger 
-          icon={<LogoutOutlined />} 
-          onClick={logout}
-        >
-          Sair
-        </Button>
+        <LogoutButton />
       </Header>
       
       <Layout>
@@ -576,68 +563,7 @@ export default function AdminDashboard() {
               </>
             )}
 
-            {selectedMenu === 'profile' && (
-              <>
-                <Title level={2} className="mb-6">Meu Perfil</Title>
-                
-                <Card>
-                  <Descriptions title="Informações Pessoais" bordered column={1}>
-                    <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
-                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
-                    <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
-                    <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
-                    <Descriptions.Item label="Função">Administrador</Descriptions.Item>
-                  </Descriptions>
-                  
-                  <div className="mt-6">
-                    <Button 
-                      type="primary" 
-                      onClick={() => {
-                        profileForm.setFieldsValue(user);
-                        setIsEditProfileModalOpen(true);
-                      }}
-                    >
-                      Editar Perfil
-                    </Button>
-                  </div>
-                </Card>
-
-                <Modal
-                  title="Editar Perfil"
-                  open={isEditProfileModalOpen}
-                  onCancel={() => setIsEditProfileModalOpen(false)}
-                  footer={null}
-                >
-                  <Form
-                    form={profileForm}
-                    layout="vertical"
-                    onFinish={handleUpdateProfile}
-                  >
-                    <Form.Item
-                      name="name"
-                      label="Nome"
-                      rules={[{ required: true, message: 'Por favor, insira seu nome' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="phone"
-                      label="Telefone"
-                      rules={[{ required: true, message: 'Por favor, insira seu telefone' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item style={{ marginBottom: 0 }}>
-                      <Button type="primary" htmlType="submit" block>
-                        Salvar Alterações
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </>
-            )}
+            {selectedMenu === 'profile' && <UserProfile user={user} />}
           </Content>
         </Layout>
       </Layout>

@@ -6,7 +6,7 @@ import { useLogin } from '../../http/use-login';
 import z from 'zod';
 import Cookies from 'js-cookie'
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './context/UserContext';
+import { useAuth } from '../context/UserContext';
 import { useEffect } from 'react';
 
 const { Title, Paragraph } = Typography;

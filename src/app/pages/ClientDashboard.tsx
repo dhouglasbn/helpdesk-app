@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Popconfirm } from 'antd';
 import { 
-  LogoutOutlined, 
   PlusOutlined, 
   UserOutlined, 
   FileTextOutlined,
-  DeleteOutlined,
   DollarOutlined
 } from '@ant-design/icons';
-import type { User, Service, Ticket } from '@/app/App';
-import { useAuth } from './context/UserContext';
+import type { Service, Ticket } from '@/app/App';
+import { useAuth } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { LogoutButton } from '../components/logout-button';
+import { UserProfile } from '../components/user-profile';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -59,16 +59,14 @@ const mockTickets: Ticket[] = [
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
   const [form] = Form.useForm();
-  const [profileForm] = Form.useForm();
 
   useEffect(() => {
-    if (!user) navigate("/", { replace: true })
+    if (!user || user?.role !== "client") navigate("/", { replace: true })
   }, [user, navigate])
 
   const activeServices = mockServices.filter(s => s.active);
@@ -99,13 +97,9 @@ export default function ClientDashboard() {
     form.resetFields();
   };
 
-  const handleUpdateProfile = (values: any) => {
-    message.success('Perfil atualizado com sucesso!');
-    setIsEditProfileModalOpen(false);
-  };
+  
 
-  const handleDeleteAccount = () => {
-  };
+  
 
   const columns = [
     {
@@ -161,14 +155,7 @@ export default function ClientDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro</Title>
-        <Button 
-          type="primary" 
-          danger 
-          icon={<LogoutOutlined />} 
-          onClick={logout}
-        >
-          Sair
-        </Button>
+        <LogoutButton />
       </Header>
       
       <Layout>
@@ -285,88 +272,7 @@ export default function ClientDashboard() {
               </>
             )}
 
-            {selectedMenu === 'profile' && (
-              <>
-                <Title level={2} className="mb-6">Meu Perfil</Title>
-                
-                <Card>
-                  <Descriptions title="Informações Pessoais" bordered column={1}>
-                    <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
-                    <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
-                    <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
-                    <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
-                    <Descriptions.Item label="Função">Cliente</Descriptions.Item>
-                  </Descriptions>
-                  
-                  <div className="mt-6 flex gap-4">
-                    <Button 
-                      type="primary" 
-                      onClick={() => {
-                        profileForm.setFieldsValue(user);
-                        setIsEditProfileModalOpen(true);
-                      }}
-                    >
-                      Editar Perfil
-                    </Button>
-                    <Popconfirm
-                      title="Excluir Conta"
-                      description="Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita."
-                      onConfirm={handleDeleteAccount}
-                      okText="Sim, excluir"
-                      cancelText="Cancelar"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button danger icon={<DeleteOutlined />}>
-                        Excluir Conta
-                      </Button>
-                    </Popconfirm>
-                  </div>
-                </Card>
-
-                <Modal
-                  title="Editar Perfil"
-                  open={isEditProfileModalOpen}
-                  onCancel={() => setIsEditProfileModalOpen(false)}
-                  footer={null}
-                >
-                  <Form
-                    form={profileForm}
-                    layout="vertical"
-                    onFinish={handleUpdateProfile}
-                  >
-                    <Form.Item
-                      name="name"
-                      label="Nome"
-                      rules={[{ required: true, message: 'Por favor, insira seu nome' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="phone"
-                      label="Telefone"
-                      rules={[{ required: true, message: 'Por favor, insira seu telefone' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="address"
-                      label="Endereço"
-                      rules={[{ required: true, message: 'Por favor, insira seu endereço' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item className="!mb-0">
-                      <Button type="primary" htmlType="submit" block>
-                        Salvar Alterações
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </>
-            )}
+            {selectedMenu === 'profile' && <UserProfile user={user} />}
           </Content>
         </Layout>
       </Layout>

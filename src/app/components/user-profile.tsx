@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Avatar, Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { UserData } from '../../http/types/userData';
-import { env } from "../../env";
 import { AvatarUploader } from "./avatar-uploader";
-import { useUpdatePicture } from "../../http/use-update-picture";
+import { z } from 'zod';
+import { useUpdateUser } from "../../http/use-update-user";
 
 const { Title } = Typography;
 
@@ -12,12 +12,37 @@ interface UserProfileProps {
   user: UserData | null
 }
 
+const updateUserSchema = z.object({
+  newName: z.string().min(3),
+	newEmail: z.email(),
+	newPhone: z.string().min(10),
+	newAddress: z.string().min(5),
+})
+
+type UpdateUserFormData = z.infer<typeof updateUserSchema>;
+
 
 export function UserProfile({user}: UserProfileProps) {
-  const [profileForm] = Form.useForm();
+  const { mutateAsync: updateUser, isPending } = useUpdateUser();
+  const [profileForm] = Form.useForm<UpdateUserFormData>();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
-  const handleUpdateProfile = (values: any) => {
+  const handleUpdateProfile = async ({
+    newName,
+    newEmail,
+    newAddress,
+    newPhone
+  }: UpdateUserFormData) => {
+    if (!user) return message.error("Você não está mais autenticado")
+    await updateUser({
+      userId: user.id,
+      role: user.role,
+      newName,
+      newEmail,
+      newAddress,
+      newPhone,
+    })
+
     message.success('Perfil atualizado com sucesso!');
     setIsEditProfileModalOpen(false);
   };
@@ -61,7 +86,12 @@ export function UserProfile({user}: UserProfileProps) {
           <Button 
             type="primary" 
             onClick={() => {
-              profileForm.setFieldsValue(user);
+              profileForm.setFieldsValue({
+                newName: user?.name,
+                newEmail: user?.email,
+                newAddress: user?.address,
+                newPhone: user?.phone
+              });
               setIsEditProfileModalOpen(true);
             }}
           >
@@ -96,7 +126,7 @@ export function UserProfile({user}: UserProfileProps) {
           onFinish={handleUpdateProfile}
         >
           <Form.Item
-            name="name"
+            name="newName"
             label="Nome"
             rules={[{ required: true, message: 'Por favor, insira seu nome' }]}
           >
@@ -104,7 +134,15 @@ export function UserProfile({user}: UserProfileProps) {
           </Form.Item>
 
           <Form.Item
-            name="phone"
+            name="newEmail"
+            label="Email"
+            rules={[{ required: true, message: 'Por favor, insira seu email' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="newPhone"
             label="Telefone"
             rules={[{ required: true, message: 'Por favor, insira seu telefone' }]}
           >
@@ -112,7 +150,7 @@ export function UserProfile({user}: UserProfileProps) {
           </Form.Item>
 
           <Form.Item
-            name="address"
+            name="newAddress"
             label="Endereço"
             rules={[{ required: true, message: 'Por favor, insira seu endereço' }]}
           >
@@ -120,7 +158,7 @@ export function UserProfile({user}: UserProfileProps) {
           </Form.Item>
 
           <Form.Item className="!mb-0">
-            <Button type="primary" htmlType="submit" block>
+            <Button loading={isPending} type="primary" htmlType="submit" block>
               Salvar Alterações
             </Button>
           </Form.Item>

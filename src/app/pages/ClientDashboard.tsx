@@ -56,7 +56,6 @@ export default function ClientDashboard() {
     message.success('Chamado criado com sucesso!')
     form.resetFields();
     setIsCreateTicketModalOpen(false);
-    await queryClient.invalidateQueries({ queryKey: ["client-history"]})
   };
 
   const calculateTicketTotal = (serviceIds: string[]) => {
@@ -145,7 +144,7 @@ export default function ClientDashboard() {
         <div className='flex items-center gap-5'>
           <Avatar
             size={50}
-            src={`${env.VITE_API_URL}${user?.picturePath}`}
+            src={`${env.VITE_API_URL}${user?.picturePath}?t=${Date.now()}`}
           />
           <LogoutButton />
         </div>

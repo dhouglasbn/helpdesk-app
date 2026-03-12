@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
+import { Avatar, Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { UserData } from '../../http/types/userData';
+import { env } from "../../env";
+import { AvatarUploader } from "./avatar-uploader";
+import { useUpdatePicture } from "../../http/use-update-picture";
 
 const { Title } = Typography;
 
@@ -36,6 +39,9 @@ export function UserProfile({user}: UserProfileProps) {
   return (
     <>
       <Title level={2} className="mb-6">Meu Perfil</Title>
+      <div className="flex w-full justify-center">
+        <AvatarUploader user={user} />
+      </div>
                 
       <Card>
         <Descriptions title="Informações Pessoais" bordered column={1}>

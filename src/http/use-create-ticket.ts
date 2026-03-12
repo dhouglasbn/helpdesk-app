@@ -1,10 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
 import { toast } from "react-toastify";
 import type { CreateTicketRequest } from "./types/create-ticket-request";
 import Cookies from "js-cookie";
 
 export function useCreateTicket() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (data: CreateTicketRequest) => {
 			const token = Cookies.get("access_token");
@@ -38,6 +39,9 @@ export function useCreateTicket() {
 			toast.error(
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
+		},
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["client-history"] });
 		},
 	});
 }

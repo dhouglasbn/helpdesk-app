@@ -1,10 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import type { UpdatePictureRequest } from "./types/update-picture-request";
 
 export function useUpdatePicture() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (data: UpdatePictureRequest) => {
 			const token = Cookies.get("access_token");
@@ -45,6 +46,10 @@ export function useUpdatePicture() {
 			toast.error(
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
+		},
+
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["me"] });
 		},
 	});
 }

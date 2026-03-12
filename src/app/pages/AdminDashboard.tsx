@@ -333,7 +333,7 @@ export default function AdminDashboard() {
         <div className='flex gap-5'>
           <Avatar
             size={38}
-            src={`${env.VITE_API_URL}${user?.picturePath}`}
+            src={`${env.VITE_API_URL}${user?.picturePath}?t=${Date.now()}`}
           />
           <LogoutButton />
         </div>

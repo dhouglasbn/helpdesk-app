@@ -7,4 +7,6 @@ export type UserData = {
 	role: string;
 	availabilities?: string[];
 	picturePath?: string;
+	createdAt: string;
+	updatedAt: string;
 };

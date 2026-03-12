@@ -91,10 +91,10 @@ export default function ClientDashboard() {
       render: (tech: techInTicketData) => (
         <div className='flex gap-2'>
           <Avatar
-            size={25}
+            size={40}
             src={`${env.VITE_API_URL}${tech.picturePath}`}
           />
-          <p className='font-medium'>{tech.name}</p>
+          <p className='font-medium p-2'>{tech.name}</p>
         </div>
       )
     },
@@ -142,9 +142,9 @@ export default function ClientDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro</Title>
-        <div className='flex gap-5'>
+        <div className='flex items-center gap-5'>
           <Avatar
-            size={38}
+            size={50}
             src={`${env.VITE_API_URL}${user?.picturePath}`}
           />
           <LogoutButton />
@@ -225,10 +225,10 @@ export default function ClientDashboard() {
                           <Option key={tech.id} value={tech.id}>
                             <div className='flex gap-2'>
                               <Avatar
-                                size={30}
+                                size={50}
                                 src={`${env.VITE_API_URL}${tech.picturePath}`}
                               />
-                              <Paragraph className='font-medium'>{tech.name}</Paragraph>
+                              <Paragraph className='font-medium text-center p-3'>{tech.name}</Paragraph>
                             </div>
                             <Paragraph>Email: <strong>{tech.email}</strong></Paragraph>
                             <Paragraph>Telefone: <strong>{showPhoneNumber(tech.phone)}</strong></Paragraph>

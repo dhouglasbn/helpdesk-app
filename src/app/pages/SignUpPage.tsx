@@ -1,13 +1,16 @@
-import { useState } from 'react';
 import { z } from 'zod'
-import { Form, Input, Button, Card, Typography, message, Upload, Avatar } from 'antd';
+import { Form, Input, Button, Card, Typography, message, Upload } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, HomeOutlined, CameraOutlined } from '@ant-design/icons';
 import ImgCrop from 'antd-img-crop';
 import { useCreateClient } from '../../http/use-create-client';
-import type { UploadProps } from 'antd';
-import type { Page } from '@/app/App';
+import { useLogin } from '../../http/use-login';
+import type { UploadFile, UploadProps } from 'antd';
 import { Link, useNavigate } from 'react-router-dom'
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
+import { useUpdatePicture } from '../../http/use-update-picture';
+import Cookies from 'js-cookie'
+import { useQueryClient } from '@tanstack/react-query';
+
 
 const { Title, Paragraph } = Typography;
 
@@ -20,22 +23,29 @@ const createClientSchema = z.object({
 			address: z.string().min(5),
 		})
 
-type CreateClientFormData = z.infer<typeof createClientSchema>
+type CreateClientFormData = z.infer<typeof createClientSchema> & {
+  picture: UploadFile[]
+}
 
 export default function SignUpPage() {
   const { 
-    isPending,
+    isPending: isCreationPending,
     mutateAsync: createClient
   } = useCreateClient();
+  const {
+    isPending: isUpdatePicturePending,
+    mutateAsync: updatePicture,
+  } = useUpdatePicture();
+  const {mutateAsync: login} = useLogin();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [form] = Form.useForm<CreateClientFormData>();
+  const fileList = Form.useWatch("picture", form) || []
 
   const uploadProps: UploadProps = {
     name: 'avatar',
     listType: 'picture-circle',
-    showUploadList: false,
+    maxCount: 1,
     beforeUpload: (file) => {
       const isImage = file.type.startsWith('image/');
       if (!isImage) {
@@ -47,20 +57,14 @@ export default function SignUpPage() {
         message.error('A imagem deve ter menos de 5MB!');
         return Upload.LIST_IGNORE;
       }
-      
-      // Preview the image
-      setAvatarFile(file)
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      
       return false; // Prevent auto upload
     },
-    onRemove: () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl('');
-      setAvatarFile(null);
-},
+    previewFile: async (file) => {
+      return URL.createObjectURL(file)
+    },
+    onChange: ({ fileList }) => {
+      form.setFieldValue("picture", fileList.slice(-1))
+    }
   };
 
   const handleCreateClient = async ({
@@ -68,18 +72,32 @@ export default function SignUpPage() {
     email,
     password,
     phone,
-    address
+    address,
+    picture
   }: CreateClientFormData) => {
     
-    await createClient({
+    const { newClient } = await createClient({
       name,
       email,
       password,
       phone,
       address
     });
+
+    const { token } = await login({email, password});
+    Cookies.set("access_token", token, {
+      expires: 1,
+      sameSite: "Strict"
+    })
+
+    await updatePicture({
+      userId: newClient.id,
+      picture
+    })
+    message.success("Usuário cadastrado com sucesso !")
     form.resetFields()
-    navigate('/signIn')
+    await queryClient.invalidateQueries({ queryKey: ["me"]})
+    navigate('/clientDashboard')
   };
 
   return (
@@ -101,7 +119,8 @@ export default function SignUpPage() {
           {/* Profile Picture Upload - Circular */}
           <Form.Item
             name="picture"
-            valuePropName="file"
+            valuePropName="fileList"
+            getValueFromEvent={e => e?.fileList?.slice(-1)}
             className="flex justify-center mb-8"
             rules={[{ required: true, message: 'Por favor, envie sua foto de perfil' }]}
           >
@@ -114,25 +133,25 @@ export default function SignUpPage() {
                 modalCancel="Cancelar"
                 cropShape="round"
               >
-                <Upload {...uploadProps}>
-                  <div className="relative cursor-pointer group">
-                    {avatarFile ? (
-                      <div className="relative">
-                        <Avatar
-                          size={150}
-                          src={previewUrl}
-                          className="border-4 border-dashed border-blue-400 transition-all group-hover:border-blue-600"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-[150px] h-[150px] rounded-full border-4 border-dashed border-gray-300 hover:border-blue-500 transition-all flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50">
-                        <CameraOutlined className="text-4xl text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-500 text-center px-4">
-                          Clique ou arraste sua foto
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                <Upload fileList={fileList} {...uploadProps} className="
+                  [&_.ant-upload-select]:!w-[180px]
+                  [&_.ant-upload-select]:!h-[180px]
+                  [&_.ant-upload-list-item]:!w-[180px]
+                  [&_.ant-upload-list-item]:!h-[180px]
+                  [&_.ant-upload-list-item-container]:!w-[180px]
+                  [&_.ant-upload-list-item-container]:!h-[180px]
+                  [&_.ant-upload-list-item-thumbnail_img]:!w-full
+                  [&_.ant-upload-list-item-thumbnail_img]:!h-full
+                  [&_.ant-upload-list-item-thumbnail_img]:!object-cover
+                  [&_.ant-upload-list-item-thumbnail_img]:!rounded-full
+                  [&_.anticon]:!text-3xl
+                ">
+                  {fileList.length < 1 && (
+                    <div className="relative cursor-pointer group">
+                      <CameraOutlined />
+                      <div className="mt-4">Enviar Foto</div>
+                    </div>
+                  )}
                 </Upload>
               </ImgCrop>
               <Paragraph type="secondary" className="!text-xs !mt-3 !mb-0 text-center">
@@ -225,7 +244,11 @@ export default function SignUpPage() {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={isPending}>
+            <Button 
+            type="primary" 
+            htmlType="submit" 
+            block 
+            loading={isCreationPending || isUpdatePicturePending}>
               Criar Conta
             </Button>
           </Form.Item>

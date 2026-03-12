@@ -6,4 +6,5 @@ export type UserData = {
 	address: string;
 	role: string;
 	availabilities?: string[];
+	picturePath?: string;
 };

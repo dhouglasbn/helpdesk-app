@@ -1,137 +1,108 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Input, Select, Typography, Descriptions, message, Popconfirm } from 'antd';
+import { Layout, Menu, Button, Table, Tag, Modal, Form, message, Typography, Select, Card, Avatar } from 'antd';
 import { 
   PlusOutlined, 
   UserOutlined, 
   FileTextOutlined,
   DollarOutlined
 } from '@ant-design/icons';
-import type { Service, Ticket } from '@/app/App';
 import { useAuth } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { LogoutButton } from '../components/logout-button';
 import { UserProfile } from '../components/user-profile';
+import { useClientTicketHistory } from "../../http/use-client-ticket-history";
+import type { ServiceData } from '../../http/types/service-data';
+import { useListServices } from '../../http/use-list-services';
+import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCreateTicket } from '../../http/use-create-ticket';
+import type { techInTicketData } from '../../http/types/ticket-data';
+import { env } from '../../env';
+import { useListTechs } from '../../http/use-list-techs';
+
 
 const { Header, Content, Sider } = Layout;
-const { Title } = Typography;
-const { TextArea } = Input;
-const { Option } = Select;
+const { Title, Paragraph } = Typography;
+const { Option } = Select
 
+const createTicketSchema = z.object({
+  techId: z.string(),
+  servicesIds: z.array(z.coerce.string())
+})
 
-// Mock data
-const mockServices: Service[] = [
-  { id: '1', name: 'Instalação de Software', description: 'Instalação e configuração de software', price: 150, active: true },
-  { id: '2', name: 'Manutenção de Hardware', description: 'Reparo e manutenção de hardware', price: 200, active: true },
-  { id: '3', name: 'Consultoria', description: 'Consultoria técnica especializada', price: 300, active: true },
-  { id: '4', name: 'Treinamento', description: 'Treinamento de usuários', price: 250, active: true },
-  { id: '5', name: 'Serviço Desativado', description: 'Este serviço está desativado', price: 100, active: false },
-];
-
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    clientId: '1',
-    technicianId: '2',
-    services: ['1'],
-    status: 'Aberto',
-    createdAt: '2026-01-28',
-    description: 'Preciso instalar o Office 365'
-  },
-  {
-    id: '2',
-    clientId: '1',
-    technicianId: '2',
-    services: ['2', '3'],
-    status: 'Em atendimento',
-    createdAt: '2026-01-25',
-    description: 'Computador não liga'
-  },
-  {
-    id: '3',
-    clientId: '1',
-    technicianId: '2',
-    services: ['4'],
-    status: 'Encerrado',
-    createdAt: '2026-01-20',
-    description: 'Treinamento para a equipe'
-  },
-];
+type CreateTicketFormData = z.infer<typeof createTicketSchema>;
 
 export default function ClientDashboard() {
+  const { data: clientTicketHistory, isPending } = useClientTicketHistory();
+  const { data: servicesList } = useListServices();
+  const { data: techList } = useListTechs();
+  const { mutateAsync: createTicket } = useCreateTicket();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<CreateTicketFormData>();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!user || user?.role !== "client") navigate("/", { replace: true })
+    if (!user || user?.role !== "client") {
+      navigate("/", { replace: true })
+    }
   }, [user, navigate])
 
-  const activeServices = mockServices.filter(s => s.active);
+  const handleCreateTicket = async ({ techId, servicesIds }: CreateTicketFormData) => {
+    await createTicket({techId, servicesIds});
 
-  const getServiceById = (id: string) => mockServices.find(s => s.id === id);
+    message.success('Chamado criado com sucesso!')
+    form.resetFields();
+    setIsCreateTicketModalOpen(false);
+    await queryClient.invalidateQueries({ queryKey: ["client-history"]})
+  };
 
   const calculateTicketTotal = (serviceIds: string[]) => {
-    return serviceIds.reduce((total, id) => {
-      const service = getServiceById(id);
-      return total + (service?.price || 0);
-    }, 0);
+    return String(serviceIds.reduce((total, id) => {
+      const service = servicesList?.find(s => s.id === id);
+      return total + (Number(service?.price) || 0);
+    }, 0));
   };
 
-  const handleCreateTicket = (values: any) => {
-    const newTicket: Ticket = {
-      id: String(tickets.length + 1),
-      clientId: user?.id,
-      technicianId: '2',
-      services: values.services,
-      status: 'Aberto',
-      createdAt: new Date().toISOString().split('T')[0],
-      description: values.description,
-    };
-    
-    setTickets([newTicket, ...tickets]);
-    message.success('Ticket criado com sucesso!');
-    setIsCreateTicketModalOpen(false);
-    form.resetFields();
-  };
-
-  
-
-  
+  const showPhoneNumber = (phoneNumber: string) => {
+    return `(${phoneNumber.slice(0,2)})${phoneNumber.slice(2,7)}-${phoneNumber.slice(7, 11)}`
+  }
 
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-    },
-    {
-      title: 'Descrição',
-      dataIndex: 'description',
-      key: 'description',
-    },
     {
       title: 'Serviços',
       dataIndex: 'services',
       key: 'services',
-      render: (services: string[]) => (
+      width: 450,
+      render: (services: ServiceData[]) => (
         <>
-          {services.map(serviceId => {
-            const service = getServiceById(serviceId);
-            return service ? <Tag key={serviceId}>{service.name}</Tag> : null;
+          {services.map(service => {
+            return service ? <Tag key={service.id}>{service.title}</Tag> : null;
           })}
         </>
       ),
     },
     {
+      title: 'Técnico',
+      dataIndex: 'tech',
+      key: 'tech.id',
+      render: (tech: techInTicketData) => (
+        <div className='flex gap-2'>
+          <Avatar
+            size={25}
+            src={`${env.VITE_API_URL}${tech.picturePath}`}
+          />
+          <p className='font-medium'>{tech.name}</p>
+        </div>
+      )
+    },
+    {
       title: 'Total',
-      key: 'total',
-      render: (_: any, record: Ticket) => (
-        <span>R$ {calculateTicketTotal(record.services).toFixed(2)}</span>
-      ),
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+      render: (price: string) => `R$ ${price}`
     },
     {
       title: 'Status',
@@ -140,7 +111,7 @@ export default function ClientDashboard() {
       render: (status: string) => {
         let color = 'blue';
         if (status === 'Em atendimento') color = 'orange';
-        if (status === 'Encerrado') color = 'green';
+        if (status === 'Encerrado') color = 'red';
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -148,6 +119,22 @@ export default function ClientDashboard() {
       title: 'Data',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      render: (value: string) => {
+        const date = new Date(value);
+
+        const time = date.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const day = date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit'
+        });
+
+        return `${time} ${day}`
+      },
     },
   ];
 
@@ -155,7 +142,13 @@ export default function ClientDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro</Title>
-        <LogoutButton />
+        <div className='flex gap-5'>
+          <Avatar
+            size={38}
+            src={`${env.VITE_API_URL}${user?.picturePath}`}
+          />
+          <LogoutButton />
+        </div>
       </Header>
       
       <Layout>
@@ -169,7 +162,7 @@ export default function ClientDashboard() {
               {
                 key: 'tickets',
                 icon: <FileTextOutlined />,
-                label: 'Meus Tickets',
+                label: 'Meus Chamados',
               },
               {
                 key: 'profile',
@@ -185,23 +178,25 @@ export default function ClientDashboard() {
             {selectedMenu === 'tickets' && (
               <>
                 <div className="flex justify-between items-center mb-6">
-                  <Title level={2} className="!m-0">Meus Tickets</Title>
+                  <Title level={2} className="!m-0">Meus Chamados</Title>
                   <Button 
                     type="primary" 
                     icon={<PlusOutlined />} 
                     onClick={() => setIsCreateTicketModalOpen(true)}
                     size="large"
                   >
-                    Criar Ticket
+                    Criar Chamado
                   </Button>
                 </div>
                 
-                <Table 
-                  columns={columns} 
-                  dataSource={tickets} 
-                  rowKey="id"
-                  pagination={{ pageSize: 10 }}
-                />
+                {
+                  !isPending && <Table 
+                    columns={columns} 
+                    dataSource={clientTicketHistory} 
+                    rowKey="id"
+                    pagination={{ pageSize: 10 }}
+                  />
+                }
 
                 <Modal
                   title="Criar Novo Ticket"
@@ -219,15 +214,35 @@ export default function ClientDashboard() {
                     onFinish={handleCreateTicket}
                   >
                     <Form.Item
-                      name="description"
-                      label="Descrição do Problema"
-                      rules={[{ required: true, message: 'Por favor, descreva o problema' }]}
+                      name="techId"
+                      label="Técnico responsável"
+                      rules={[{ required: true, message: 'Selecione pelo um técnico' }]}
                     >
-                      <TextArea rows={4} placeholder="Descreva detalhadamente o problema" />
+                      <Select
+                        placeholder="Selecione um técnico"
+                      >
+                        {techList?.map(tech => (
+                          <Option key={tech.id} value={tech.id}>
+                            <div className='flex gap-2'>
+                              <Avatar
+                                size={30}
+                                src={`${env.VITE_API_URL}${tech.picturePath}`}
+                              />
+                              <Paragraph className='font-medium'>{tech.name}</Paragraph>
+                            </div>
+                            <Paragraph>Email: <strong>{tech.email}</strong></Paragraph>
+                            <Paragraph>Telefone: <strong>{showPhoneNumber(tech.phone)}</strong></Paragraph>
+                            <Paragraph className='m-0'>Disponibilidades:</Paragraph>
+                            <div className='flex gap-2'>
+                              {tech.availabilities?.map(availability => <Tag color='green' key={availability}>{availability}</Tag>)}
+                            </div>
+                          </Option>
+                        ))}
+                      </Select>
                     </Form.Item>
 
                     <Form.Item
-                      name="services"
+                      name="servicesIds"
                       label="Serviços Necessários"
                       rules={[{ required: true, message: 'Selecione pelo menos um serviço' }]}
                     >
@@ -236,9 +251,9 @@ export default function ClientDashboard() {
                         placeholder="Selecione os serviços"
                         optionFilterProp="children"
                       >
-                        {activeServices.map(service => (
+                        {servicesList?.map(service => (
                           <Option key={service.id} value={service.id}>
-                            {service.name} - R$ {service.price.toFixed(2)}
+                            {service.title} - R$ {service.price}
                           </Option>
                         ))}
                       </Select>
@@ -246,16 +261,16 @@ export default function ClientDashboard() {
 
                     <Form.Item
                       noStyle
-                      shouldUpdate={(prevValues, currentValues) => prevValues.services !== currentValues.services}
+                      shouldUpdate={(prevValues, currentValues) => prevValues.servicesIds !== currentValues.servicesIds}
                     >
                       {({ getFieldValue }) => {
-                        const selectedServices = getFieldValue('services') || [];
-                        const total = calculateTicketTotal(selectedServices);
-                        return total > 0 ? (
+                        const selectedServices = getFieldValue('servicesIds') || [];
+                        const total = calculateTicketTotal(selectedServices)
+                        return total !== "0" ? (
                           <Card size="small" className="mb-4 bg-gray-50">
                             <div className="flex justify-between items-center">
                               <span><DollarOutlined /> Total Estimado:</span>
-                              <strong className="text-lg text-blue-500">R$ {total.toFixed(2)}</strong>
+                              <strong className="text-lg text-blue-500">R$ {total}</strong>
                             </div>
                           </Card>
                         ) : null;

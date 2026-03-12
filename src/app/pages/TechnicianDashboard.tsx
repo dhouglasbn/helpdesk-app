@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Select, Typography, message, Space } from 'antd';
+import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Select, Avatar, Typography, message, Space } from 'antd';
 import { 
   UserOutlined, 
   FileTextOutlined,
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserContext';
 import { LogoutButton } from '../components/logout-button';
 import { UserProfile } from '../components/user-profile';
+import { env } from '../../env';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -219,7 +220,13 @@ export default function TechnicianDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro - Técnico</Title>
-        <LogoutButton />
+        <div className='flex gap-5'>
+          <Avatar
+            size={38}
+            src={`${env.VITE_API_URL}${user?.picturePath}`}
+          />
+          <LogoutButton />
+        </div>
       </Header>
       
       <Layout>

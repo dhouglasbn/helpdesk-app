@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Table, Tag, Modal, Form, Input, Select, Typography, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
+import { Layout, Menu, Button, Table, Tag, Modal, Form, Input, Select, Avatar, Typography, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
 import { 
   UserOutlined, 
   FileTextOutlined,
@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserContext';
 import { LogoutButton } from '../components/logout-button';
 import { UserProfile } from '../components/user-profile';
+import { env } from '../../env';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -329,7 +330,13 @@ export default function AdminDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro - Admin</Title>
-        <LogoutButton />
+        <div className='flex gap-5'>
+          <Avatar
+            size={38}
+            src={`${env.VITE_API_URL}${user?.picturePath}`}
+          />
+          <LogoutButton />
+        </div>
       </Header>
       
       <Layout>

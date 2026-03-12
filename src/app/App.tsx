@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import 'antd/dist/reset.css';
 import '@/styles/app.css';
 import LandingPage from '@/app/pages/LandingPage';

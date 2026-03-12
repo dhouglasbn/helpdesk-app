@@ -37,6 +37,7 @@ export default function SignInPage() {
       sameSite: "Strict"
     })
 
+    form.resetFields();
     await queryClient.invalidateQueries({ queryKey: ["me"]})
   };
 

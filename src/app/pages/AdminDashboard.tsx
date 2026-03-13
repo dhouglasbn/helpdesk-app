@@ -330,9 +330,9 @@ export default function AdminDashboard() {
     <Layout className="min-h-screen">
       <Header className="flex items-center justify-between bg-[#001529] px-6">
         <Title level={3} className="!text-white !m-0">HelpDesk Pro - Admin</Title>
-        <div className='flex gap-5'>
+        <div className='flex gap-5 items-center'>
           <Avatar
-            size={38}
+            size={50}
             src={`${env.VITE_API_URL}${user?.picturePath}?t=${Date.now()}`}
           />
           <LogoutButton />

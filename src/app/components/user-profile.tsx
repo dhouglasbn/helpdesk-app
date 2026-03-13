@@ -5,11 +5,13 @@ import type { UserData } from '../../http/types/userData';
 import { AvatarUploader } from "./avatar-uploader";
 import { z } from 'zod';
 import { useUpdateUser } from "../../http/use-update-user";
+import { useDeleteClient } from "../../http/use-delete-client";
 
 const { Title } = Typography;
 
 interface UserProfileProps {
-  user: UserData | null
+  user: UserData | null,
+  logout?: () => void,
 }
 
 const updateUserSchema = z.object({
@@ -22,8 +24,9 @@ const updateUserSchema = z.object({
 type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 
 
-export function UserProfile({user}: UserProfileProps) {
+export function UserProfile({user, logout}: UserProfileProps) {
   const { mutateAsync: updateUser, isPending } = useUpdateUser();
+  const { mutateAsync: deleteClient, isPending: isDeletionPending } = useDeleteClient();
   const [profileForm] = Form.useForm<UpdateUserFormData>();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
@@ -47,7 +50,13 @@ export function UserProfile({user}: UserProfileProps) {
     setIsEditProfileModalOpen(false);
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+    if (!user) return message.error("Sua sessão de autenticação está encerrada.")
+    if (!logout) return message.error("Ocorreu um erro inesperado.")
+
+    await deleteClient({userId: user.id})
+    message.success("Conta excluída!")
+    logout();
   };
 
   const getRoleLabel = (role?: string) => {
@@ -106,7 +115,7 @@ export function UserProfile({user}: UserProfileProps) {
               cancelText="Cancelar"
               okButtonProps={{ danger: true }}
             >
-              <Button danger icon={<DeleteOutlined />}>
+              <Button loading={isDeletionPending} danger icon={<DeleteOutlined />}>
                 Excluir Conta
               </Button>
             </Popconfirm>

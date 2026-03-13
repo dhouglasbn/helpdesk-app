@@ -1,51 +1,34 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
 import type { UpdateUserRequest } from "./types/update-user-request";
-import type { CreateClientResponse } from "./types/create-client-response";
 import { message } from "antd";
 import Cookies from "js-cookie";
+import type { DeleteClientRequest } from "./types/delete-client-request";
 
-export function useUpdateUser() {
+export function useDeleteClient() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async ({
-			userId,
-			newName,
-			newEmail,
-			newAddress,
-			newPhone,
-			role,
-		}: UpdateUserRequest) => {
+		mutationFn: async ({ userId }: DeleteClientRequest) => {
 			const token = Cookies.get("access_token");
 			if (!token) throw new Error("No token");
 
 			const response = await fetch(
-				`${env.VITE_API_URL}/users/${role}/${userId}`,
+				`${env.VITE_API_URL}/users/client/${userId}`,
 				{
-					method: "PUT",
+					method: "DELETE",
 					headers: {
-						"Content-Type": "application/json",
 						Authorization: `Bearer ${token}`,
 					},
-					body: JSON.stringify({
-						newName,
-						newEmail,
-						newAddress,
-						newPhone,
-					}),
 				},
 			);
 
-			const result = await response.json();
-
-			if (!response.ok) {
+			if (response.status !== 204) {
+				const result = await response.json();
 				throw {
 					status: response.status,
 					message: result.error || "Erro inesperado",
 				};
 			}
-
-			return;
 		},
 		onError: (error: any) => {
 			if (error.status === 400) {
@@ -56,8 +39,8 @@ export function useUpdateUser() {
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
 		},
-		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["me"] });
-		},
+		// onSuccess: async () => {
+		// 	await queryClient.invalidateQueries({ queryKey: ["me"] });
+		// },
 	});
 }

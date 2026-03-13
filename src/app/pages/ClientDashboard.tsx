@@ -14,7 +14,6 @@ import { useClientTicketHistory } from "../../http/use-client-ticket-history";
 import type { ServiceData } from '../../http/types/service-data';
 import { useListServices } from '../../http/use-list-services';
 import { z } from 'zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { useCreateTicket } from '../../http/use-create-ticket';
 import type { techInTicketData } from '../../http/types/ticket-data';
 import { env } from '../../env';
@@ -38,11 +37,10 @@ export default function ClientDashboard() {
   const { data: techList } = useListTechs();
   const { mutateAsync: createTicket } = useCreateTicket();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, logout } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
   const [form] = Form.useForm<CreateTicketFormData>();
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!user || user?.role !== "client") {
@@ -286,7 +284,7 @@ export default function ClientDashboard() {
               </>
             )}
 
-            {selectedMenu === 'profile' && <UserProfile user={user} />}
+            {selectedMenu === 'profile' && <UserProfile user={user} logout={logout} />}
           </Content>
         </Layout>
       </Layout>

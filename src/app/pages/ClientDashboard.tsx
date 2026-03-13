@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Table, Tag, Modal, Form, message, Typography, Select, Card, Avatar } from 'antd';
+import { Layout, Menu, Button, Table, Tag, Modal, Form, message, Typography, Select, Card, Avatar, Space } from 'antd';
 import { 
   PlusOutlined, 
   UserOutlined, 
@@ -228,20 +228,39 @@ export default function ClientDashboard() {
                         placeholder="Selecione um técnico"
                       >
                         {techList?.map(tech => (
-                          <Option key={tech.id} value={tech.id}>
-                            <div className='flex gap-2'>
-                              <Avatar
-                                size={50}
-                                src={`${env.VITE_API_URL}${tech.picturePath}`}
-                              />
-                              <Paragraph className='font-medium text-center p-3'>{tech.name}</Paragraph>
-                            </div>
-                            <Paragraph>Email: <strong>{tech.email}</strong></Paragraph>
-                            <Paragraph>Telefone: <strong>{showPhoneNumber(tech.phone)}</strong></Paragraph>
-                            <Paragraph className='m-0'>Disponibilidades:</Paragraph>
-                            <div className='flex gap-2'>
-                              {tech.availabilities?.map(availability => <Tag color='green' key={availability}>{availability}</Tag>)}
-                            </div>
+                          <Option key={tech.id} value={tech.id} label={tech.name}>
+                            <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                              
+                              {/* Header */}
+                              <Space align="center">
+                                <Avatar
+                                  size={40}
+                                  src={`${env.VITE_API_URL}${tech.picturePath}`}
+                                />
+                                <Typography.Text strong>
+                                  {tech.name}
+                                </Typography.Text>
+                              </Space>
+
+                              {/* Informações */}
+                              <Typography.Text type="secondary">
+                                {tech.email}
+                              </Typography.Text>
+
+                              <Typography.Text type="secondary">
+                                {showPhoneNumber(tech.phone)}
+                              </Typography.Text>
+
+                              {/* Disponibilidades */}
+                              <Space wrap>
+                                {tech.availabilities?.map((availability) => (
+                                  <Tag color="green" key={availability}>
+                                    {availability}
+                                  </Tag>
+                                ))}
+                              </Space>
+
+                            </Space>
                           </Option>
                         ))}
                       </Select>

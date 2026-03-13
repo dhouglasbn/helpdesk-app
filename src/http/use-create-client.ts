@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { env } from "../env";
 import type { CreateClientRequest } from "./types/create-client-request";
 import type { CreateClientResponse } from "./types/create-client-response";
-import { toast } from "react-toastify";
+import { message } from "antd";
 
 export function useCreateClient() {
 	return useMutation({
@@ -28,10 +28,10 @@ export function useCreateClient() {
 		},
 		onError: (error: any) => {
 			if (error.status === 400) {
-				toast.error(error.message);
+				message.error(error.message);
 				return;
 			}
-			toast.error(
+			message.error(
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
 		},

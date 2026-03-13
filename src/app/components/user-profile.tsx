@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Avatar, Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
 import type { UserData } from '../../http/types/userData';
 import { AvatarUploader } from "./avatar-uploader";
 import { z } from 'zod';
 import { useUpdateUser } from "../../http/use-update-user";
 import { useDeleteClient } from "../../http/use-delete-client";
+import { useUpdateUserPassword } from "../../http/use-update-user-password";
 
 const { Title } = Typography;
 
@@ -21,14 +22,22 @@ const updateUserSchema = z.object({
 	newAddress: z.string().min(5),
 })
 
-type UpdateUserFormData = z.infer<typeof updateUserSchema>;
+const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(6),
+  newPassword: z.string().min(6),
+})
 
+type UpdateUserFormData = z.infer<typeof updateUserSchema>;
+type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
 export function UserProfile({user, logout}: UserProfileProps) {
   const { mutateAsync: updateUser, isPending } = useUpdateUser();
   const { mutateAsync: deleteClient, isPending: isDeletionPending } = useDeleteClient();
+  const { mutateAsync: updateUserPassword } = useUpdateUserPassword();
   const [profileForm] = Form.useForm<UpdateUserFormData>();
+  const [passwordForm] = Form.useForm<UpdatePasswordFormData>();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
 
   const handleUpdateProfile = async ({
     newName,
@@ -50,6 +59,22 @@ export function UserProfile({user, logout}: UserProfileProps) {
     setIsEditProfileModalOpen(false);
   };
 
+  const handleUpdatePassword = async ({
+    currentPassword,
+    newPassword
+  }: UpdatePasswordFormData) => {
+    if (!user) return message.error("Sua sessão de autenticação encerrou");
+
+    await updateUserPassword({
+      userId: user.id,
+      currentPassword,
+      newPassword
+    });
+
+    message.success("Senha atualizada com sucesso!")
+    setIsUpdatePasswordModalOpen(false);
+  }
+
   const handleDeleteAccount = async () => {
     if (!user) return message.error("Sua sessão de autenticação está encerrada.")
     if (!logout) return message.error("Ocorreu um erro inesperado.")
@@ -58,6 +83,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
     message.success("Conta excluída!")
     logout();
   };
+  
 
   const getRoleLabel = (role?: string) => {
     switch(role) {
@@ -105,6 +131,12 @@ export function UserProfile({user, logout}: UserProfileProps) {
             }}
           >
             Editar Perfil
+          </Button>
+          <Button 
+            type="primary" 
+            onClick={() => setIsUpdatePasswordModalOpen(true)}
+          >
+            Atualizar Senha
           </Button>
           {user?.role === 'client' && (
             <Popconfirm
@@ -169,6 +201,55 @@ export function UserProfile({user, logout}: UserProfileProps) {
           <Form.Item className="!mb-0">
             <Button loading={isPending} type="primary" htmlType="submit" block>
               Salvar Alterações
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ATUALIZAÇÃO DE SENHA */}
+      <Modal
+        title="Atualizar Senha"
+        open={isUpdatePasswordModalOpen}
+        onCancel={() => setIsUpdatePasswordModalOpen(false)}
+        footer={null}
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handleUpdatePassword}
+        >
+          <Form.Item
+            name="currentPassword"
+            label="Senha atual"
+            rules={[
+              { required: true, message: 'Por favor, insira a senha atual' },
+              { min: 6, message: 'A senha deve ter no mínimo 6 caracteres' }
+            ]}
+            
+          >
+            <Input.Password 
+              prefix={<LockOutlined />} 
+              placeholder="Mínimo 6 caracteres"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="newPassword"
+            label="Nova Senha"
+            rules={[
+              { required: true, message: 'Por favor, insira a nova senha' },
+              { min: 6, message: 'A senha deve ter no mínimo 6 caracteres' }
+            ]}
+          >
+            <Input.Password 
+              prefix={<LockOutlined />} 
+              placeholder="Mínimo 6 caracteres" 
+            />
+          </Form.Item>
+
+          <Form.Item className="!mb-0">
+            <Button loading={isPending} type="primary" htmlType="submit" block>
+              Alterar Senha
             </Button>
           </Form.Item>
         </Form>

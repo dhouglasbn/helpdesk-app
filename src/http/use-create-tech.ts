@@ -1,40 +1,25 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
-import type { UpdateUserRequest } from "./types/update-user-request";
+import type { CreateUserRequest } from "./types/create-user-request";
 import type { CreateUserResponse } from "./types/create-user-response";
 import { message } from "antd";
 import Cookies from "js-cookie";
 
-export function useUpdateUser() {
+export function useCreateTech() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async ({
-			userId,
-			newName,
-			newEmail,
-			newAddress,
-			newPhone,
-			role,
-		}: UpdateUserRequest) => {
+		mutationFn: async (data: CreateUserRequest) => {
 			const token = Cookies.get("access_token");
 			if (!token) throw new Error("No token");
 
-			const response = await fetch(
-				`${env.VITE_API_URL}/users/${role}/${userId}`,
-				{
-					method: "PUT",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${token}`,
-					},
-					body: JSON.stringify({
-						newName,
-						newEmail,
-						newAddress,
-						newPhone,
-					}),
+			const response = await fetch(`${env.VITE_API_URL}/users/tech`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(data),
+			});
 
 			const result = await response.json();
 
@@ -45,7 +30,7 @@ export function useUpdateUser() {
 				};
 			}
 
-			return;
+			return result as CreateUserResponse;
 		},
 		onError: (error: any) => {
 			if (error.status === 400) {
@@ -57,7 +42,7 @@ export function useUpdateUser() {
 			);
 		},
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["me"] });
+			await queryClient.invalidateQueries({ queryKey: ["list-techs"] });
 		},
 	});
 }

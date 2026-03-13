@@ -1,12 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { env } from "../env";
-import type { CreateClientRequest } from "./types/create-client-request";
-import type { CreateClientResponse } from "./types/create-client-response";
+import type { CreateUserRequest } from "./types/create-user-request";
+import type { CreateUserResponse } from "./types/create-user-response";
 import { message } from "antd";
 
 export function useCreateClient() {
 	return useMutation({
-		mutationFn: async (data: CreateClientRequest) => {
+		mutationFn: async (data: CreateUserRequest) => {
 			const response = await fetch(`${env.VITE_API_URL}/users/client`, {
 				method: "POST",
 				headers: {
@@ -24,7 +24,7 @@ export function useCreateClient() {
 				};
 			}
 
-			return result as CreateClientResponse;
+			return result as CreateUserResponse;
 		},
 		onError: (error: any) => {
 			if (error.status === 400) {

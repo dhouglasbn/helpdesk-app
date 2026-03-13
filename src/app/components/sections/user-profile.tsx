@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message, Tag, Select } from "antd";
 import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
-import type { UserData } from '../../http/types/userData';
-import { AvatarUploader } from "./avatar-uploader";
+import type { UserData } from '../../../http/types/userData';
+import { AvatarUploader } from "../avatar-uploader";
 import { z } from 'zod';
-import { useUpdateUser } from "../../http/use-update-user";
-import { useDeleteClient } from "../../http/use-delete-client";
-import { useUpdateUserPassword } from "../../http/use-update-user-password";
-import { useUpdateTechAvailabilities } from "../../http/use-update-tech-availabilities";
+import { useUpdateUser } from "../../../http/use-update-user";
+import { useDeleteClient } from "../../../http/use-delete-client";
+import { useUpdateUserPassword } from "../../../http/use-update-user-password";
+import { useUpdateTechAvailabilities } from "../../../http/use-update-tech-availabilities";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -117,6 +117,10 @@ export function UserProfile({user, logout}: UserProfileProps) {
     }
   }
 
+  const showPhoneNumber = (phoneNumber?: string) => {
+    return `(${phoneNumber?.slice(0,2)})${phoneNumber?.slice(2,7)}-${phoneNumber?.slice(7, 11)}`
+  }
+
   const availabilities = () => Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
@@ -132,7 +136,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
         <Descriptions title="Informações Pessoais" bordered column={1}>
           <Descriptions.Item label="Nome">{user?.name}</Descriptions.Item>
           <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
-          <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
+          <Descriptions.Item label="Telefone">{showPhoneNumber(user?.phone) || 'Não informado'}</Descriptions.Item>
           <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
           <Descriptions.Item label="Função">{getRoleLabel(user?.role)}</Descriptions.Item>
           {user?.role === "tech" && (

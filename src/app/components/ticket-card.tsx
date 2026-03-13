@@ -8,7 +8,7 @@ interface ServiceCardProps {
   ticket: TechTicketListData;
 }
 
-export function ServiceCard({ ticket }: ServiceCardProps) {
+export function TicketCard({ ticket }: ServiceCardProps) {
   return (
     <Card size="small" className="mb-4">
       <Descriptions column={1} size="small">

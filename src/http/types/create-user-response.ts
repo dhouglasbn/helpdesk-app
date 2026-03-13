@@ -1,4 +1,4 @@
-export type CreateClientResponse = {
+export type CreateUserResponse = {
 	newClient: {
 		id: string;
 		name: string;
@@ -8,5 +8,5 @@ export type CreateClientResponse = {
 		address: string;
 		role: string;
 		picture: string | null;
-	}
+	};
 };

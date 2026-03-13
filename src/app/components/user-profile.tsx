@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
+import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message, Tag, Select } from "antd";
 import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
 import type { UserData } from '../../http/types/userData';
 import { AvatarUploader } from "./avatar-uploader";
@@ -7,8 +7,10 @@ import { z } from 'zod';
 import { useUpdateUser } from "../../http/use-update-user";
 import { useDeleteClient } from "../../http/use-delete-client";
 import { useUpdateUserPassword } from "../../http/use-update-user-password";
+import { useUpdateTechAvailabilities } from "../../http/use-update-tech-availabilities";
 
 const { Title } = Typography;
+const { Option } = Select;
 
 interface UserProfileProps {
   user: UserData | null,
@@ -27,17 +29,25 @@ const updatePasswordSchema = z.object({
   newPassword: z.string().min(6),
 })
 
+const updateAvailabilitiesSchema = z.object({
+  newAvailabilities: z.array(z.string())
+})
+
 type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
+type UpdateAvailabilitiesFormData = z.infer<typeof updateAvailabilitiesSchema>
 
 export function UserProfile({user, logout}: UserProfileProps) {
   const { mutateAsync: updateUser, isPending } = useUpdateUser();
   const { mutateAsync: deleteClient, isPending: isDeletionPending } = useDeleteClient();
-  const { mutateAsync: updateUserPassword } = useUpdateUserPassword();
+  const { mutateAsync: updateUserPassword, isPending: isUpdatePassPending } = useUpdateUserPassword();
+  const { mutateAsync: updateTechAvailabilities, isPending: isUpdateAvPending} = useUpdateTechAvailabilities();
   const [profileForm] = Form.useForm<UpdateUserFormData>();
   const [passwordForm] = Form.useForm<UpdatePasswordFormData>();
+  const [availabilitiesForm] = Form.useForm<UpdateAvailabilitiesFormData>();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
+  const [isUpdateAvailabilitiesModalOpen, setIsUpdateAvailabilitiesModalOpen] = useState(false);
 
   const handleUpdateProfile = async ({
     newName,
@@ -83,6 +93,17 @@ export function UserProfile({user, logout}: UserProfileProps) {
     message.success("Conta excluída!")
     logout();
   };
+
+  const handleUpdateAvailabilities = async ({
+    newAvailabilities
+  }: UpdateAvailabilitiesFormData) => {
+    if (!user) return message.error("Sua sessão de autenticação encerrou!");
+    await updateTechAvailabilities({techId: user.id, newAvailabilities});
+
+    message.success("Disponibilidades alteradas com sucesso!");
+    availabilitiesForm.resetFields();
+    setIsUpdateAvailabilitiesModalOpen(false);
+  }
   
 
   const getRoleLabel = (role?: string) => {
@@ -95,6 +116,10 @@ export function UserProfile({user, logout}: UserProfileProps) {
         return "Cliente"
     }
   }
+
+  const availabilities = () => Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
 
   return (
     <>
@@ -110,9 +135,13 @@ export function UserProfile({user, logout}: UserProfileProps) {
           <Descriptions.Item label="Telefone">{user?.phone || 'Não informado'}</Descriptions.Item>
           <Descriptions.Item label="Endereço">{user?.address || 'Não informado'}</Descriptions.Item>
           <Descriptions.Item label="Função">{getRoleLabel(user?.role)}</Descriptions.Item>
-          {user?.availabilities && (
+          {user?.role === "tech" && (
             <Descriptions.Item label="Disponibilidades">
-              {`[${user.availabilities}]`}
+              {user.availabilities?.map((availability) => (
+                <Tag color="green" key={availability}>
+                  {availability}
+                </Tag>
+              ))}
             </Descriptions.Item>
           )}
         </Descriptions>
@@ -151,6 +180,19 @@ export function UserProfile({user, logout}: UserProfileProps) {
                 Excluir Conta
               </Button>
             </Popconfirm>
+          )}
+          {user?.role === "tech" && (
+            <Button 
+              type="primary" 
+              onClick={() => {
+                setIsUpdateAvailabilitiesModalOpen(true)
+                availabilitiesForm.setFieldsValue({
+                  newAvailabilities: user.availabilities
+                })
+              }}
+            >
+              Atualizar Disponibilidades
+            </Button>
           )}
         </div>
       </Card>
@@ -248,8 +290,50 @@ export function UserProfile({user, logout}: UserProfileProps) {
           </Form.Item>
 
           <Form.Item className="!mb-0">
-            <Button loading={isPending} type="primary" htmlType="submit" block>
+            <Button loading={isUpdatePassPending} type="primary" htmlType="submit" block>
               Alterar Senha
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ATUALIZAÇÃO DE DISPONIBILIDADES DO TÉCNICO */}
+
+      <Modal
+        title="Atualizar Disponibilidades"
+        open={isUpdateAvailabilitiesModalOpen}
+        onCancel={() => setIsUpdateAvailabilitiesModalOpen(false)}
+        footer={null}
+      >
+        <Form
+          form={availabilitiesForm}
+          layout="vertical"
+          onFinish={handleUpdateAvailabilities}
+        >
+          <Form.Item
+            name="newAvailabilities"
+            label="Disponibilidades"
+            rules={[
+              { required: true, message: 'Por favor, insira ao menos um horário' },
+            ]}
+            
+          >
+            <Select
+              mode="multiple"
+              placeholder="Selecione as disponibilidades"
+              optionFilterProp="children"
+            >
+              {availabilities().map(availability => (
+                <Option key={availability} value={availability}>
+                  {availability}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item className="!mb-0">
+            <Button loading={isUpdateAvPending} type="primary" htmlType="submit" block>
+              Confirmar
             </Button>
           </Form.Item>
         </Form>

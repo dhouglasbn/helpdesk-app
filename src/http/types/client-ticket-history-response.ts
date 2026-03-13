@@ -1,3 +1,3 @@
-import type { TicketData } from "./ticket-data";
+import type { ClientHistoryTicketData } from "./ticket-data";
 
-export type ClientTicketHistoryResponse = TicketData[];
+export type ClientTicketHistoryResponse = ClientHistoryTicketData[];

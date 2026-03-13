@@ -15,11 +15,12 @@ import type { ServiceData } from '../../http/types/service-data';
 import { useListServices } from '../../http/use-list-services';
 import { z } from 'zod';
 import { useCreateTicket } from '../../http/use-create-ticket';
-import type { TechInTicketData } from '../../http/types/ticket-data';
+import type { UserInTicketData } from '../../http/types/ticket-data';
 import { env } from '../../env';
 import { useListTechs } from '../../http/use-list-techs';
 import { TechInfoModal } from '../components/tech-info-modal';
 import type { UserData } from '../../http/types/userData';
+import { TicketStatusTag } from '../components/ticket-status-tag';
 
 
 const { Header, Content, Sider } = Layout;
@@ -88,7 +89,7 @@ export default function ClientDashboard() {
       title: 'Técnico',
       dataIndex: 'tech',
       key: 'tech.id',
-      render: (tech: TechInTicketData) => (
+      render: (tech: UserInTicketData) => (
         <Button
           onClick={() => {
             const techInfo = techList?.find(t => t.id === tech.id);
@@ -114,12 +115,7 @@ export default function ClientDashboard() {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        let color = 'blue';
-        if (status === 'Em atendimento') color = 'orange';
-        if (status === 'Encerrado') color = 'red';
-        return <Tag color={color}>{status}</Tag>;
-      },
+      render: (status: string) => <TicketStatusTag status={status} />,
     },
     {
       title: 'Data',

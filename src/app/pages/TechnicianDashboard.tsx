@@ -1,215 +1,175 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Card, Table, Tag, Modal, Form, Select, Avatar, Typography, message, Space } from 'antd';
+import { z } from 'zod';
+import { Layout, Menu, Button, Table, Tag, Modal, Form, Select, Avatar, Typography, message, Space } from 'antd';
 import { 
   UserOutlined, 
   FileTextOutlined,
   PlusOutlined,
   EditOutlined
 } from '@ant-design/icons';
-import type { Service, Ticket } from '@/app/App';
+import { useTechTicketList } from '../../http/use-tech-ticket-list'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserContext';
 import { LogoutButton } from '../components/logout-button';
 import { UserProfile } from '../components/user-profile';
 import { env } from '../../env';
+import type { TechTicketListData, UserInTicketData } from '../../http/types/ticket-data';
+import type { ServiceData } from '../../http/types/service-data';
+import { useListServices } from '../../http/use-list-services';
+import { TicketStatusTag } from '../components/ticket-status-tag';
+import { ServiceCard } from '../components/service-card';
+import { useAddServicesToTicket } from '../../http/use-add-services-to-ticket';
+import { useUpdateTicketStatus } from '../../http/use-update-ticket-status';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
 
-// Mock data
-const mockServices: Service[] = [
-  { id: '1', name: 'Instalação de Software', description: 'Instalação e configuração de software', price: 150, active: true },
-  { id: '2', name: 'Manutenção de Hardware', description: 'Reparo e manutenção de hardware', price: 200, active: true },
-  { id: '3', name: 'Consultoria', description: 'Consultoria técnica especializada', price: 300, active: true },
-  { id: '4', name: 'Treinamento', description: 'Treinamento de usuários', price: 250, active: true },
-];
+const addServiceSchema = z.object({
+  servicesIds: z.array(z.uuid())
+})
 
-const mockClients = [
-  { id: '1', name: 'João Silva' },
-  { id: '3', name: 'Pedro Costa' },
-];
+const updateStatusSchema = z.object({
+  status: z.string()
+})
 
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    clientId: '1',
-    technicianId: '2',
-    services: ['1'],
-    status: 'Aberto',
-    createdAt: '2026-01-28',
-    description: 'Preciso instalar o Office 365'
-  },
-  {
-    id: '2',
-    clientId: '1',
-    technicianId: '2',
-    services: ['2', '3'],
-    status: 'Em atendimento',
-    createdAt: '2026-01-25',
-    description: 'Computador não liga'
-  },
-  {
-    id: '3',
-    clientId: '1',
-    technicianId: '2',
-    services: ['4'],
-    status: 'Encerrado',
-    createdAt: '2026-01-20',
-    description: 'Treinamento para a equipe'
-  },
-  {
-    id: '4',
-    clientId: '3',
-    technicianId: '2',
-    services: ['1', '2'],
-    status: 'Aberto',
-    createdAt: '2026-01-27',
-    description: 'Instalação e manutenção urgente'
-  },
-];
+type AddServiceFormData = z.infer<typeof addServiceSchema>
+type UpdateTicketStatusFormData = z.infer<typeof updateStatusSchema>
 
 export default function TechnicianDashboard() {
+  const { mutateAsync: addServicesToTicket } = useAddServicesToTicket();
+  const { mutateAsync: updateTicketStatus } = useUpdateTicketStatus();
+  const { data: ticketList } = useTechTicketList();
+  const { data: serviceList } = useListServices();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
-  const [serviceForm] = Form.useForm();
-  const [statusForm] = Form.useForm();
+  const [selectedTicket, setSelectedTicket] = useState<TechTicketListData | null>(null);
+  const [serviceForm] = Form.useForm<AddServiceFormData>();
+  const [statusForm] = Form.useForm<UpdateTicketStatusFormData>();
 
   useEffect(() => {
     if (!user || user?.role !== "tech") navigate("/", { replace: true })
   }, [user, navigate])
 
-  const getServiceById = (id: string) => mockServices.find(s => s.id === id);
-  const getClientById = (id: string) => mockClients.find(c => c.id === id);
+  const handleAddService = async ({ servicesIds }: AddServiceFormData) => {
+      if (!selectedTicket) return message.error("Nenhum Chamado foi selecionado.")
 
-  const calculateTicketTotal = (serviceIds: string[]) => {
-    return serviceIds.reduce((total, id) => {
-      const service = getServiceById(id);
-      return total + (service?.price || 0);
-    }, 0);
-  };
-
-  const handleAddService = (values: any) => {
-    if (selectedTicket) {
-      const updatedTickets = tickets.map(ticket => {
-        if (ticket.id === selectedTicket.id) {
-          return {
-            ...ticket,
-            services: [...ticket.services, ...values.services],
-          };
-        }
-        return ticket;
-      });
-      setTickets(updatedTickets);
+      await addServicesToTicket({
+        ticketId: selectedTicket.id,
+        servicesIds
+      })
       message.success('Serviços adicionados com sucesso!');
       setIsAddServiceModalOpen(false);
       serviceForm.resetFields();
     }
-  };
 
-  const handleUpdateStatus = (values: any) => {
-    if (selectedTicket) {
-      const updatedTickets = tickets.map(ticket => {
-        if (ticket.id === selectedTicket.id) {
-          return {
-            ...ticket,
-            status: values.status,
-          };
-        }
-        return ticket;
-      });
-      setTickets(updatedTickets);
-      message.success('Status atualizado com sucesso!');
-      setIsUpdateStatusModalOpen(false);
-      statusForm.resetFields();
-    }
+  const handleUpdateStatus = async ({ status }: UpdateTicketStatusFormData) => {
+    if (!selectedTicket) return message.error("Nenhum chamado foi selecionado")
+
+    await updateTicketStatus({ ticketId: selectedTicket.id, status });
+
+    message.success('Status atualizado com sucesso!');
+    setIsUpdateStatusModalOpen(false);
+    statusForm.resetFields();
   };
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-    },
-    {
-      title: 'Cliente',
-      dataIndex: 'clientId',
-      key: 'clientId',
-      render: (clientId: string) => getClientById(clientId)?.name || 'Desconhecido',
-    },
-    {
-      title: 'Descrição',
-      dataIndex: 'description',
-      key: 'description',
-    },
-    {
       title: 'Serviços',
       dataIndex: 'services',
       key: 'services',
-      render: (services: string[]) => (
+      render: (services: ServiceData[]) => (
         <>
-          {services.map(serviceId => {
-            const service = getServiceById(serviceId);
-            return service ? <Tag key={serviceId}>{service.name}</Tag> : null;
+          {services.map(service => {
+            return service ? <Tag key={service.id}>{service.title}</Tag> : null;
           })}
         </>
       ),
     },
     {
+      title: 'Cliente',
+      dataIndex: 'client',
+      key: 'client.id',
+      render: (client: UserInTicketData) => (
+        <Button
+          // onClick={() => {
+          //   const techInfo = techList?.find(t => t.id === client.id);
+          //   if(!techInfo) return;
+          //   setSelectedTech(techInfo)
+          // }} 
+          className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
+          <Avatar
+            size={40}
+            src={`${env.VITE_API_URL}${client.picturePath}`}
+          />
+          <span className='font-medium p-2'>{client.name}</span>
+        </Button>
+      )
+    },
+    {
       title: 'Total',
-      key: 'total',
-      render: (_: any, record: Ticket) => (
-        <span>R$ {calculateTicketTotal(record.services).toFixed(2)}</span>
-      ),
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+      width: 100,
+      render: (price: string) => `R$ ${price}`
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        let color = 'blue';
-        if (status === 'Em atendimento') color = 'orange';
-        if (status === 'Encerrado') color = 'green';
-        return <Tag color={color}>{status}</Tag>;
-      },
+      render: (status: string) => <TicketStatusTag status={status} />,
     },
     {
       title: 'Data',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 140,
+      render: (value: string) => {
+        const date = new Date(value);
+
+        const time = date.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const day = date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit'
+        });
+
+        return `${time} ${day}`
+      },
     },
     {
       title: 'Ações',
       key: 'actions',
-      render: (_: any, record: Ticket) => (
-        <Space>
+      render: (_: any, ticket: TechTicketListData) => (
+        <Space className='flex flex-col'>
           <Button
             size="small"
             icon={<PlusOutlined />}
             onClick={() => {
-              setSelectedTicket(record);
+              setSelectedTicket(ticket);
               setIsAddServiceModalOpen(true);
             }}
           >
-            Serviço
+            Adicionar Serviço
           </Button>
           <Button
             size="small"
             type="primary"
             icon={<EditOutlined />}
             onClick={() => {
-              setSelectedTicket(record);
-              statusForm.setFieldsValue({ status: record.status });
+              setSelectedTicket(ticket);
+              statusForm.setFieldsValue({ status: ticket.status });
               setIsUpdateStatusModalOpen(true);
             }}
           >
-            Status
+            Alterar Status
           </Button>
         </Space>
       ),
@@ -259,7 +219,7 @@ export default function TechnicianDashboard() {
                 
                 <Table 
                   columns={columns} 
-                  dataSource={tickets.filter(t => t.technicianId === user?.id)} 
+                  dataSource={ticketList} 
                   rowKey="id"
                   pagination={{ pageSize: 10 }}
                 />
@@ -277,11 +237,7 @@ export default function TechnicianDashboard() {
                 >
                   {selectedTicket && (
                     <>
-                      <Card size="small" className="mb-4 bg-gray-50">
-                        <p><strong>Ticket:</strong> #{selectedTicket.id}</p>
-                        <p><strong>Cliente:</strong> {getClientById(selectedTicket.clientId)?.name}</p>
-                        <p><strong>Descrição:</strong> {selectedTicket.description}</p>
-                      </Card>
+                      <ServiceCard ticket={selectedTicket} />
 
                       <Form
                         form={serviceForm}
@@ -289,7 +245,7 @@ export default function TechnicianDashboard() {
                         onFinish={handleAddService}
                       >
                         <Form.Item
-                          name="services"
+                          name="servicesIds"
                           label="Serviços Adicionais"
                           rules={[{ required: true, message: 'Selecione pelo menos um serviço' }]}
                         >
@@ -298,11 +254,9 @@ export default function TechnicianDashboard() {
                             placeholder="Selecione os serviços"
                             optionFilterProp="children"
                           >
-                            {mockServices
-                              .filter(s => !selectedTicket.services.includes(s.id))
-                              .map(service => (
+                            {serviceList?.map(service => (
                                 <Option key={service.id} value={service.id}>
-                                  {service.name} - R$ {service.price.toFixed(2)}
+                                  {service.title} - R$ {service.price}
                                 </Option>
                               ))}
                           </Select>
@@ -330,16 +284,7 @@ export default function TechnicianDashboard() {
                 >
                   {selectedTicket && (
                     <>
-                      <Card size="small" className="mb-4 bg-gray-50">
-                        <p><strong>Ticket:</strong> #{selectedTicket.id}</p>
-                        <p><strong>Cliente:</strong> {getClientById(selectedTicket.clientId)?.name}</p>
-                        <p className="!mb-0">
-                          <strong>Total:</strong>{' '}
-                          <span className="text-blue-500 text-base">
-                            R$ {calculateTicketTotal(selectedTicket.services).toFixed(2)}
-                          </span>
-                        </p>
-                      </Card>
+                      <ServiceCard ticket={selectedTicket} />
 
                       <Form
                         form={statusForm}
@@ -352,9 +297,9 @@ export default function TechnicianDashboard() {
                           rules={[{ required: true, message: 'Selecione um status' }]}
                         >
                           <Select placeholder="Selecione o status">
-                            <Option value="Aberto">Aberto</Option>
-                            <Option value="Em atendimento">Em atendimento</Option>
-                            <Option value="Encerrado">Encerrado</Option>
+                            <Option value="aberto">Aberto</Option>
+                            <Option value="em_atendimento">Em atendimento</Option>
+                            <Option value="encerrado">Encerrado</Option>
                           </Select>
                         </Form.Item>
 

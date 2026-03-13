@@ -1,24 +1,32 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
-import type { CreateTicketRequest } from "./types/create-ticket-request";
+import type { AddServicesToTicketRequest } from "./types/add-services-to-ticket-request";
 import Cookies from "js-cookie";
 import { message } from "antd";
 
-export function useCreateTicket() {
+export function useAddServicesToTicket() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (data: CreateTicketRequest) => {
+		mutationFn: async ({
+			ticketId,
+			servicesIds,
+		}: AddServicesToTicketRequest) => {
 			const token = Cookies.get("access_token");
 			if (!token) throw new Error("No token");
 
-			const response = await fetch(`${env.VITE_API_URL}/tickets`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
+			const response = await fetch(
+				`${env.VITE_API_URL}/tickets/addServices/${ticketId}`,
+				{
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						servicesIds,
+					}),
 				},
-				body: JSON.stringify(data),
-			});
+			);
 
 			const result = await response.json();
 
@@ -41,7 +49,7 @@ export function useCreateTicket() {
 			);
 		},
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["client-history"] });
+			await queryClient.invalidateQueries({ queryKey: ["tech-ticket-list"] });
 		},
 	});
 }

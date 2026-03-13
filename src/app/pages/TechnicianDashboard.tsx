@@ -20,6 +20,7 @@ import { TicketStatusTag } from '../components/ticket-status-tag';
 import { ServiceCard } from '../components/service-card';
 import { useAddServicesToTicket } from '../../http/use-add-services-to-ticket';
 import { useUpdateTicketStatus } from '../../http/use-update-ticket-status';
+import { ClientInfoModal } from '../components/client-info-modal';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -43,9 +44,12 @@ export default function TechnicianDashboard() {
   const { data: serviceList } = useListServices();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
+  const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<TechTicketListData | null>(null);
   const [serviceForm] = Form.useForm<AddServiceFormData>();
   const [statusForm] = Form.useForm<UpdateTicketStatusFormData>();
@@ -93,19 +97,18 @@ export default function TechnicianDashboard() {
       title: 'Cliente',
       dataIndex: 'client',
       key: 'client.id',
-      render: (client: UserInTicketData) => (
+      render: (_: any, ticket: TechTicketListData) => (
         <Button
-          // onClick={() => {
-          //   const techInfo = techList?.find(t => t.id === client.id);
-          //   if(!techInfo) return;
-          //   setSelectedTech(techInfo)
-          // }} 
+          onClick={() => {
+            setIsUserInfoModalOpen(true)
+            setSelectedTicket(ticket)
+          }} 
           className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
           <Avatar
             size={40}
-            src={`${env.VITE_API_URL}${client.picturePath}`}
+            src={`${env.VITE_API_URL}${ticket.client.picturePath}`}
           />
-          <span className='font-medium p-2'>{client.name}</span>
+          <span className='font-medium p-2'>{ticket.client.name}</span>
         </Button>
       )
     },
@@ -215,7 +218,7 @@ export default function TechnicianDashboard() {
           <Content className="bg-white p-6 min-h-[280px]">
             {selectedMenu === 'tickets' && (
               <>
-                <Title level={2} className="mb-6">Tickets Atribuídos</Title>
+                <Title level={2} className="mb-6">Chamados Atribuídos</Title>
                 
                 <Table 
                   columns={columns} 
@@ -312,6 +315,14 @@ export default function TechnicianDashboard() {
                     </>
                   )}
                 </Modal>
+                <ClientInfoModal
+                  isClientInfoModalOpen={isUserInfoModalOpen}
+                  onCancel={() => {
+                    setSelectedTicket(null)
+                    setIsUserInfoModalOpen(false)
+                  }}
+                  client={selectedTicket?.client}
+                />
               </>
             )}
 

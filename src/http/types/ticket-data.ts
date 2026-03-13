@@ -1,6 +1,6 @@
 import type { ServiceData } from "./service-data";
 
-export type techInTicketData = {
+export type TechInTicketData = {
 	id: string;
 	name: string;
 	email: string;
@@ -12,7 +12,7 @@ export type techInTicketData = {
 export type TicketData = {
 	id: string;
 	clientId: string;
-	tech: techInTicketData;
+	tech: TechInTicketData;
 	status: string;
 	createdAt: string;
 	updatedAt: string;

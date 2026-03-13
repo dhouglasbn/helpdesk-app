@@ -15,9 +15,11 @@ import type { ServiceData } from '../../http/types/service-data';
 import { useListServices } from '../../http/use-list-services';
 import { z } from 'zod';
 import { useCreateTicket } from '../../http/use-create-ticket';
-import type { techInTicketData } from '../../http/types/ticket-data';
+import type { TechInTicketData } from '../../http/types/ticket-data';
 import { env } from '../../env';
 import { useListTechs } from '../../http/use-list-techs';
+import { TechInfoModal } from '../components/tech-info-modal';
+import type { UserData } from '../../http/types/userData';
 
 
 const { Header, Content, Sider } = Layout;
@@ -41,6 +43,7 @@ export default function ClientDashboard() {
   const [selectedMenu, setSelectedMenu] = useState('tickets');
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
   const [form] = Form.useForm<CreateTicketFormData>();
+  const [selectedTech, setSelectedTech] = useState<UserData | null>(null);
 
   useEffect(() => {
     if (!user || user?.role !== "client") {
@@ -85,14 +88,20 @@ export default function ClientDashboard() {
       title: 'Técnico',
       dataIndex: 'tech',
       key: 'tech.id',
-      render: (tech: techInTicketData) => (
-        <div className='flex gap-2'>
+      render: (tech: TechInTicketData) => (
+        <Button
+          onClick={() => {
+            const techInfo = techList?.find(t => t.id === tech.id);
+            if(!techInfo) return;
+            setSelectedTech(techInfo)
+          }} 
+          className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
           <Avatar
             size={40}
             src={`${env.VITE_API_URL}${tech.picturePath}`}
           />
-          <p className='font-medium p-2'>{tech.name}</p>
-        </div>
+          <span className='font-medium p-2'>{tech.name}</span>
+        </Button>
       )
     },
     {
@@ -281,6 +290,11 @@ export default function ClientDashboard() {
                     </Form.Item>
                   </Form>
                 </Modal>
+                <TechInfoModal
+                  isTechInfoModalOpen={!!selectedTech}
+                  onCancel={() => setSelectedTech(null)}
+                  tech={selectedTech}
+                />
               </>
             )}
 

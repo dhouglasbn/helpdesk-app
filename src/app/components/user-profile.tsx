@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Avatar, Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
+import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message } from "antd";
 import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
 import type { UserData } from '../../http/types/userData';
 import { AvatarUploader } from "./avatar-uploader";

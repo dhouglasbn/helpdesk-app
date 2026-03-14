@@ -5,21 +5,21 @@ import { AvatarUploader } from "./avatar-uploader";
 
 const { Title, Text } = Typography;
 
-interface TechInfoModalProps {
-  isTechInfoModalOpen: boolean
+interface UserInfoModalProps {
+  isUserInfoModalOpen: boolean
   onCancel: () => void
-  tech: UserData | null,
+  user: UserData | null,
   updatable?: boolean
 }
 
 
-export function TechInfoModal({
-  isTechInfoModalOpen,
+export function UserInfoModal({
+  isUserInfoModalOpen,
   onCancel,
-  tech,
+  user,
   updatable,
-}: TechInfoModalProps) {
-  if (!tech) return null;
+}: UserInfoModalProps) {
+  if (!user) return null;
 
   const showPhoneNumber = (phoneNumber: string) => {
     return `(${phoneNumber.slice(0,2)})${phoneNumber.slice(2,7)}-${phoneNumber.slice(7, 11)}`
@@ -27,8 +27,8 @@ export function TechInfoModal({
 
   return (
     <Modal
-      title={`Informações do técnico`}
-      open={isTechInfoModalOpen}
+      title={`Informações do usuário`}
+      open={isUserInfoModalOpen}
       onCancel={onCancel}
       footer={null}
     >
@@ -37,14 +37,14 @@ export function TechInfoModal({
         {/* Header */}
         <div className="flex flex-col items-center">
           {
-            updatable ? <AvatarUploader user={tech}/> :
+            updatable ? <AvatarUploader user={user}/> :
             <Avatar
               size={180}
-              src={`${env.VITE_API_URL}${tech.picturePath}`}
+              src={`${env.VITE_API_URL}${user.picturePath}?t=${Date.now()}`}
             />
           }
           <Title level={4} style={{ marginTop: 12 }}>
-            {tech.name}
+            {user.name}
           </Title>
         </div>
 
@@ -53,26 +53,28 @@ export function TechInfoModal({
         {/* Informações */}
         <Descriptions column={1} size="small">
           <Descriptions.Item label="Email">
-            <Text strong>{tech.email}</Text>
+            <Text strong>{user.email}</Text>
           </Descriptions.Item>
 
           <Descriptions.Item label="Telefone">
-            <Text strong>{showPhoneNumber(tech.phone)}</Text>
+            <Text strong>{showPhoneNumber(user.phone)}</Text>
           </Descriptions.Item>
 
           <Descriptions.Item label="Endereço">
-            <Text strong>{tech.address}</Text>
+            <Text strong>{user.address}</Text>
           </Descriptions.Item>
 
-          <Descriptions.Item label="Disponibilidades">
-            <Space wrap>
-              {tech.availabilities?.map((availability) => (
-                <Tag color="green" key={availability}>
-                  {availability}
-                </Tag>
-              ))}
-            </Space>
-          </Descriptions.Item>
+          {user.role === "tech" && (
+            <Descriptions.Item label="Disponibilidades">
+              <Space wrap>
+                {user.availabilities?.map((availability) => (
+                  <Tag color="green" key={availability}>
+                    {availability}
+                  </Tag>
+                ))}
+              </Space>
+            </Descriptions.Item>
+          )}
         </Descriptions>
 
       </Space>

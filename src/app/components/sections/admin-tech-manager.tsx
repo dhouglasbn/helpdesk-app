@@ -6,13 +6,13 @@ import { useListTechs } from "../../../http/use-list-techs";
 import { z } from 'zod'
 import { useCreateTech } from "../../../http/use-create-tech";
 import { env } from "../../../env";
-import { TechInfoModal } from "../tech-info-modal";
 import { useUpdateUser } from '../../../http/use-update-user';
 import { useUpdateTechAvailabilities } from "../../../http/use-update-tech-availabilities";
 import { useModal } from "../../hooks/use-modal";
 import { FormModal } from "../form-modal";
 import { AddressField, AvailabilitiesField, ConfirmButton, EmailField, NameField, PasswordField, PhoneField } from "../form-modal-fields";
 import { useUpdateUserPassword } from "../../../http/use-update-user-password";
+import { UserInfoModal } from "../user-info-modal";
 
 const { Title } = Typography;
 const { Option } = Select
@@ -320,10 +320,10 @@ export function AdminTechManager() {
         <ConfirmButton loading={isUpdatePassPending} />
       </FormModal>
 
-      <TechInfoModal 
-        isTechInfoModalOpen={techInfoModal.open} 
+      <UserInfoModal 
+        isUserInfoModalOpen={techInfoModal.open} 
         onCancel={() => techInfoModal.closeModal()}
-        tech={selectedTech}
+        user={selectedTech}
         updatable
       />
     </>

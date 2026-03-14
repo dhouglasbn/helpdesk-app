@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useClientTicketHistory } from "../../../http/use-client-ticket-history";
 import { TicketStatusTag } from "../ticket-status-tag";
 import type { ServiceData } from "../../../http/types/service-data";
-import type { UserInTicketData } from "../../../http/types/ticket-data";
+import type { UserData } from "../../../http/types/userData";
 import { useListTechs } from "../../../http/use-list-techs";
 import { env } from "../../../env";
-import type { UserData } from "../../../http/types/userData";
 import { z } from 'zod'
 import { useCreateTicket } from "../../../http/use-create-ticket";
 import { useListServices } from "../../../http/use-list-services";
-import { TechInfoModal } from "../tech-info-modal";
+import { UserInfoModal } from "../user-info-modal";
 import { useModal } from '../../hooks/use-modal'
 import { FormModal } from '../../components/form-modal'
 import { ConfirmButton, ServicesField } from '../../components/form-modal-fields'
@@ -67,7 +66,7 @@ export function ClientTicketManager() {
       title: 'Técnico',
       dataIndex: 'tech',
       key: 'tech.id',
-      render: (tech: UserInTicketData) => (
+      render: (tech: UserData) => (
         <Button
           onClick={() => {
             const techInfo = techList?.find(t => t.id === tech.id);
@@ -231,10 +230,10 @@ export function ClientTicketManager() {
           <ConfirmButton loading={isPending} />
       </FormModal>
       
-      <TechInfoModal
-        isTechInfoModalOpen={!!selectedTech}
+      <UserInfoModal
+        isUserInfoModalOpen={!!selectedTech}
         onCancel={() => setSelectedTech(null)}
-        tech={selectedTech}
+        user={selectedTech}
       />
     </>
   )

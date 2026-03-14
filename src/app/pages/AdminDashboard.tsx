@@ -21,8 +21,6 @@ const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 const { TextArea } = Input;
 
-
-
 const mockClients: User[] = [
   { id: '1', name: 'João Silva', email: 'client@example.com', role: 'client', phone: '11999999999', address: 'Rua A, 123' },
   { id: '3', name: 'Pedro Costa', email: 'client2@example.com', role: 'client', phone: '11955555555', address: 'Rua B, 456' },

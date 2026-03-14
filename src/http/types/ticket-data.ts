@@ -1,18 +1,10 @@
 import type { ServiceData } from "./service-data";
-
-export type UserInTicketData = {
-	id: string;
-	name: string;
-	email: string;
-	phone: string;
-	address: string;
-	picturePath: string;
-};
+import type { UserData } from "./userData";
 
 export type ClientHistoryTicketData = {
 	id: string;
 	clientId: string;
-	tech: UserInTicketData;
+	tech: UserData;
 	status: string;
 	createdAt: string;
 	updatedAt: string;
@@ -22,7 +14,7 @@ export type ClientHistoryTicketData = {
 
 export type TechTicketListData = {
 	id: string;
-	client: UserInTicketData;
+	client: UserData;
 	techId: string;
 	status: string;
 	createdAt: string;

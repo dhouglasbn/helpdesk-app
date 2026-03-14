@@ -11,10 +11,10 @@ import { useTechTicketList } from "../../../http/use-tech-ticket-list";
 import { useListServices } from "../../../http/use-list-services";
 import { useAddServicesToTicket } from "../../../http/use-add-services-to-ticket";
 import { useUpdateTicketStatus } from "../../../http/use-update-ticket-status";
-import { ClientInfoModal } from "../client-info-modal";
 import { FormModal } from '../../components/form-modal'
 import { ConfirmButton, ServicesField, StatusField } from "../form-modal-fields";
 import { useModal } from '../../hooks/use-modal'
+import { UserInfoModal } from "../user-info-modal";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -213,15 +213,17 @@ export function TechTicketManager() {
             <ConfirmButton loading={isUpdateStatusPending} innerText="Atualizar Status" />
           </FormModal>
         )}
-        
-      <ClientInfoModal
-        isClientInfoModalOpen={userInfoModal.open}
-        onCancel={() => {
-          setSelectedTicket(null)
-          userInfoModal.closeModal()
-        }}
-        client={selectedTicket?.client}
-      />
+
+      {selectedTicket && (
+        <UserInfoModal
+          isUserInfoModalOpen={userInfoModal.open}
+          onCancel={() => {
+            setSelectedTicket(null)
+            userInfoModal.closeModal()
+          }}
+          user={selectedTicket?.client}
+        />
+      )}
     </>
   )
 }

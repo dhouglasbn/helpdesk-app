@@ -1,20 +1,23 @@
 import { Avatar, Descriptions, Divider, Modal, Space, Tag, Typography } from "antd";
 import { env } from "../../env";
 import type { UserData } from "../../http/types/userData";
+import { AvatarUploader } from "./avatar-uploader";
 
 const { Title, Text } = Typography;
 
 interface TechInfoModalProps {
   isTechInfoModalOpen: boolean
   onCancel: () => void
-  tech: UserData | null
+  tech: UserData | null,
+  updatable?: boolean
 }
 
 
 export function TechInfoModal({
   isTechInfoModalOpen,
   onCancel,
-  tech
+  tech,
+  updatable,
 }: TechInfoModalProps) {
   if (!tech) return null;
 
@@ -33,10 +36,13 @@ export function TechInfoModal({
         
         {/* Header */}
         <div className="flex flex-col items-center">
-          <Avatar
-            size={180}
-            src={`${env.VITE_API_URL}${tech.picturePath}`}
-          />
+          {
+            updatable ? <AvatarUploader user={tech}/> :
+            <Avatar
+              size={180}
+              src={`${env.VITE_API_URL}${tech.picturePath}`}
+            />
+          }
           <Title level={4} style={{ marginTop: 12 }}>
             {tech.name}
           </Title>

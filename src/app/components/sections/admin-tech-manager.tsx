@@ -149,7 +149,7 @@ export function AdminTechManager() {
           className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
           <Avatar
             size={40}
-            src={`${env.VITE_API_URL}${tech.picturePath}`}
+            src={`${env.VITE_API_URL}${tech.picturePath}?t=${Date.now()}`}
           />
           <span className='font-medium p-2'>{tech.name}</span>
         </Button>
@@ -324,6 +324,7 @@ export function AdminTechManager() {
         isTechInfoModalOpen={techInfoModal.open} 
         onCancel={() => techInfoModal.closeModal()}
         tech={selectedTech}
+        updatable
       />
     </>
   )

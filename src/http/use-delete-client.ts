@@ -40,8 +40,8 @@ export function useDeleteClient() {
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
 		},
-		// onSuccess: async () => {
-		// 	await queryClient.invalidateQueries({ queryKey: ["me"] });
-		// },
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["list-clients"] });
+		},
 	});
 }

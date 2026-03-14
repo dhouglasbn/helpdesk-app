@@ -1,4 +1,4 @@
-import { Avatar, Button, Form, message, Modal, Select, Space, Table, Tag, Typography } from "antd";
+import { Avatar, Button, Form, message, Select, Space, Table, Tag, Typography } from "antd";
 import type { ServiceData } from "../../../http/types/service-data";
 import type { TechTicketListData } from "../../../http/types/ticket-data";
 import { useState } from "react";
@@ -17,7 +17,6 @@ import { useModal } from '../../hooks/use-modal'
 import { UserInfoModal } from "../user-info-modal";
 
 const { Title, Paragraph } = Typography;
-const { Option } = Select;
 
 const addServiceSchema = z.object({
   servicesIds: z.array(z.uuid())

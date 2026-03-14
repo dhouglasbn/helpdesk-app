@@ -18,23 +18,10 @@ import { UserProfile } from '../components/sections/user-profile';
 import { env } from '../../env';
 import { AdminTechManager } from '../components/sections/admin-tech-manager';
 import { AdminServiceManager } from '../components/sections/admin-service-manager';
+import { AdminClientManager } from '../components/sections/admin-client-manager';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
-const { TextArea } = Input;
-
-const mockClients: User[] = [
-  { id: '1', name: 'João Silva', email: 'client@example.com', role: 'client', phone: '11999999999', address: 'Rua A, 123' },
-  { id: '3', name: 'Pedro Costa', email: 'client2@example.com', role: 'client', phone: '11955555555', address: 'Rua B, 456' },
-];
-
-const mockServices: Service[] = [
-  { id: '1', name: 'Instalação de Software', description: 'Instalação e configuração de software', price: 150, active: true },
-  { id: '2', name: 'Manutenção de Hardware', description: 'Reparo e manutenção de hardware', price: 200, active: true },
-  { id: '3', name: 'Consultoria', description: 'Consultoria técnica especializada', price: 300, active: true },
-  { id: '4', name: 'Treinamento', description: 'Treinamento de usuários', price: 250, active: true },
-  { id: '5', name: 'Serviço Desativado', description: 'Este serviço está desativado', price: 100, active: false },
-];
 
 const mockTickets: Ticket[] = [
   {
@@ -71,44 +58,11 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const {user} = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('technicians');
-  const [clients, setClients] = useState<User[]>(mockClients);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
   useEffect(() => {
     if (!user || user?.role !== "admin") navigate("/", { replace: true })
   }, [user, navigate])
-  
-  const getClientById = (id: string) => clients.find(c => c.id === id);
-
-  const handleDeleteClient = (id: string) => {
-    setClients(clients.filter(c => c.id !== id));
-    message.success('Cliente excluído com sucesso!');
-  };
-
-  const clientColumns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-    { title: 'Nome', dataIndex: 'name', key: 'name' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Telefone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Endereço', dataIndex: 'address', key: 'address' },
-    {
-      title: 'Ações',
-      key: 'actions',
-      render: (_: any, record: User) => (
-        <Popconfirm
-          title="Excluir cliente"
-          description="Tem certeza que deseja excluir este cliente?"
-          onConfirm={() => handleDeleteClient(record.id)}
-          okText="Sim"
-          cancelText="Não"
-        >
-          <Button size="small" danger icon={<DeleteOutlined />}>
-            Excluir
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
 
   const ticketColumns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
@@ -116,24 +70,20 @@ export default function AdminDashboard() {
       title: 'Cliente',
       dataIndex: 'clientId',
       key: 'clientId',
-      render: (clientId: string) => getClientById(clientId)?.name || 'Desconhecido',
+      render: (clientId: string) => clientId
     },
     {
       title: 'Técnico',
       dataIndex: 'technicianId',
       key: 'technicianId',
-      render: (_techId: string) => {},
+      render: (techId: string) => techId,
     },
     { title: 'Descrição', dataIndex: 'description', key: 'description' },
     {
       title: 'Serviços',
       dataIndex: 'services',
       key: 'services',
-      render: (serviceIds: string[]) => (
-        <>
-          {}
-        </>
-      ),
+      render: (serviceIds: string[]) => serviceIds.map(id => id),
     },
     {
       title: 'Total',
@@ -209,18 +159,7 @@ export default function AdminDashboard() {
 
             {selectedMenu === 'services' && <AdminServiceManager serviceList={serviceList} />}
 
-            {selectedMenu === 'clients' && (
-              <>
-                <Title level={2} className="mb-6">Gerenciar Clientes</Title>
-                
-                <Table 
-                  columns={clientColumns} 
-                  dataSource={clients} 
-                  rowKey="id"
-                  pagination={{ pageSize: 10 }}
-                />
-              </>
-            )}
+            {selectedMenu === 'clients' && <AdminClientManager />}
 
             {selectedMenu === 'tickets' && (
               <>

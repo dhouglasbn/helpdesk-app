@@ -60,6 +60,7 @@ export function useUpdateUser() {
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: ["me"] });
 			await queryClient.invalidateQueries({ queryKey: ["list-techs"] });
+			await queryClient.invalidateQueries({ queryKey: ["list-clients"] });
 		},
 	});
 }

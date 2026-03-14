@@ -1,10 +1,10 @@
 import { DollarOutlined, PlusOutlined } from "@ant-design/icons";
-import { Avatar, Button, Form, message, Modal, Table, Tag, Typography, Select, Space, Card } from "antd";
+import { Avatar, Button, Form, message, Table, Tag, Typography, Select, Space, Card } from "antd";
 import { useState } from "react";
 import { useClientTicketHistory } from "../../../http/use-client-ticket-history";
 import { TicketStatusTag } from "../ticket-status-tag";
 import type { ServiceData } from "../../../http/types/service-data";
-import type { UserData } from "../../../http/types/userData";
+import type { UserData } from "../../../http/types/user-data";
 import { useListTechs } from "../../../http/use-list-techs";
 import { env } from "../../../env";
 import { z } from 'zod'

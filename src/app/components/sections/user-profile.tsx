@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message, Tag, Select } from "antd";
-import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
+import { Button, Card, Descriptions, Popconfirm, Typography, Form, message, Tag } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import type { UserData } from '../../../http/types/user-data';
 import { AvatarUploader } from "../avatar-uploader";
 import { z } from 'zod';
@@ -13,7 +12,6 @@ import { useModal } from "../../hooks/use-modal";
 import { AddressField, AvailabilitiesField, ConfirmButton, EmailField, NameField, PasswordField, PhoneField } from "../form-modal-fields";
 
 const { Title } = Typography;
-const { Option } = Select;
 
 interface UserProfileProps {
   user: UserData | null,

@@ -1,5 +1,5 @@
-import { EditOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
-import { Avatar, Button, Form, Input, message, Modal, Select, Space, Table, Tag, Typography } from "antd";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { Avatar, Button, Form, message, Select, Space, Table, Tag, Typography } from "antd";
 import { useState } from "react";
 import type { UserData } from "../../../http/types/user-data";
 import { useListTechs } from "../../../http/use-list-techs";

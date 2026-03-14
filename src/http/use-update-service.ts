@@ -2,25 +2,31 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
 import Cookies from "js-cookie";
 import { message } from "antd";
-import type { CreateServiceRequest } from "./types/create-service-request";
+import type { UpdateServiceRequest } from "./types/update-service-request";
 
-export function useCreateService() {
+export function useUpdateService() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (data: CreateServiceRequest) => {
+		mutationFn: async ({ serviceId, price, title }: UpdateServiceRequest) => {
 			const token = Cookies.get("access_token");
 			if (!token) {
 				message.error("Sua sessão de autenticação encerrou!");
 			}
 
-			const response = await fetch(`${env.VITE_API_URL}/services`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
+			const response = await fetch(
+				`${env.VITE_API_URL}/services/${serviceId}`,
+				{
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						title,
+						price,
+					}),
 				},
-				body: JSON.stringify(data),
-			});
+			);
 
 			const result = await response.json();
 

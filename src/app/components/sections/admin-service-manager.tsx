@@ -1,4 +1,4 @@
-import { Button, Form, message, Popconfirm, Space, Switch, Table, Tag, Typography } from "antd";
+import { Button, Form, message, Popconfirm, Space, Table, Tag, Typography } from "antd";
 import type { ServiceData } from "../../../http/types/service-data";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useModal } from "../../hooks/use-modal";
@@ -7,6 +7,8 @@ import { useCreateService } from '../../../http/use-create-service'
 import { FormModal } from "../form-modal";
 import { ConfirmButton, PriceField, TitleField } from "../form-modal-fields";
 import { useDeactivateService } from '../../../http/use-deactivate-service'
+import { useState } from "react";
+import { useUpdateService } from '../../../http/use-update-service'
 
 const { Title } = Typography
 
@@ -24,9 +26,11 @@ interface AdminServiceManagerProps {
 export function AdminServiceManager({serviceList}: AdminServiceManagerProps) {
   const { mutateAsync: createService, isPending: isCreationPending } = useCreateService();
   const { mutateAsync: deactivateService, isPending: isDeactivationPending } = useDeactivateService();
+  const { mutateAsync: updateService, isPending: isUpdatePending } = useUpdateService();
   const createServiceModal = useModal();
   const editServiceModal = useModal();
   
+  const [selectedService, setSelectedService] = useState<ServiceData | null>(null);
   const [serviceForm] = Form.useForm<ServiceFormData>();
 
   const columns = [
@@ -54,7 +58,9 @@ export function AdminServiceManager({serviceList}: AdminServiceManagerProps) {
           <Button
             size="small"
             icon={<EditOutlined />}
+            loading={isUpdatePending}
             onClick={() => {
+              setSelectedService(service);
               serviceForm.setFieldsValue({
                 title: service.title,
                 price: Number(service.price)
@@ -71,7 +77,7 @@ export function AdminServiceManager({serviceList}: AdminServiceManagerProps) {
             okText="Sim"
             cancelText="Não"
           >
-            <Button size="small" danger icon={<DeleteOutlined />}>
+            <Button loading={isDeactivationPending} size="small" danger icon={<DeleteOutlined />}>
               Desativar
             </Button>
           </Popconfirm>
@@ -86,6 +92,15 @@ export function AdminServiceManager({serviceList}: AdminServiceManagerProps) {
     message.success("Serviço Criado!")
     serviceForm.resetFields()
     createServiceModal.closeModal()
+  }
+
+  const handleUpdateService = async ({title, price}: ServiceFormData) => {
+    if (!selectedService) return message.error("Nenhum Serviço selecionado!")
+    await updateService({serviceId: selectedService.id, title, price});
+
+    message.success("Serviço Atualizado!")
+    serviceForm.resetFields()
+    editServiceModal.closeModal()
   }
 
   const handleDeactivateService = async (serviceId: string) => {
@@ -123,6 +138,22 @@ export function AdminServiceManager({serviceList}: AdminServiceManagerProps) {
           serviceForm.resetFields();
         }}
         onFinish={handleCreateService}
+        form={serviceForm}
+      >
+        <TitleField />
+        <PriceField />
+        <ConfirmButton loading={isCreationPending} />
+      </FormModal>
+
+      <FormModal
+        title='Editar Serviço'
+        open={editServiceModal.open}
+        onCancel={() => {
+          setSelectedService(null);
+          editServiceModal.closeModal()
+          serviceForm.resetFields();
+        }}
+        onFinish={handleUpdateService}
         form={serviceForm}
       >
         <TitleField />

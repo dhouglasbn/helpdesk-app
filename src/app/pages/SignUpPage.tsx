@@ -6,7 +6,6 @@ import { useCreateClient } from '../../http/use-create-client';
 import { useLogin } from '../../http/use-login';
 import type { UploadFile, UploadProps } from 'antd';
 import { Link, useNavigate } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify';
 import { useUpdatePicture } from '../../http/use-update-picture';
 import Cookies from 'js-cookie'
 import { useQueryClient } from '@tanstack/react-query';
@@ -102,7 +101,6 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] px-6 py-8">
-      <ToastContainer />
       <Card className="w-full max-w-lg">
         <div className="text-center mb-8">
           <Title level={2} className="!mb-2">Criar Conta</Title>

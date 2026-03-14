@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
-import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import type { UpdatePictureRequest } from "./types/update-picture-request";
+import { message } from "antd";
 
 export function useUpdatePicture() {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (data: UpdatePictureRequest) => {
 			const token = Cookies.get("access_token");
-			if (!token) throw new Error("No token");
+			if (!token) {
+				message.error("Sua sessão de autenticação encerrou!");
+			}
 
 			const formData = new FormData();
 			const file = data.picture?.[0]?.originFileObj;
@@ -40,10 +42,10 @@ export function useUpdatePicture() {
 		},
 		onError: (error: any) => {
 			if (error.status === 400) {
-				toast.error(error.message);
+				message.error(error.message);
 				return;
 			}
-			toast.error(
+			message.error(
 				"Houve um problema com o servidor, tente novamente mais tarde.",
 			);
 		},

@@ -9,7 +9,9 @@ export function useCreateTicket() {
 	return useMutation({
 		mutationFn: async (data: CreateTicketRequest) => {
 			const token = Cookies.get("access_token");
-			if (!token) throw new Error("No token");
+			if (!token) {
+				message.error("Sua sessão de autenticação encerrou!");
+			}
 
 			const response = await fetch(`${env.VITE_API_URL}/tickets`, {
 				method: "POST",

@@ -12,6 +12,9 @@ import { useListServices } from "../../../http/use-list-services";
 import { useAddServicesToTicket } from "../../../http/use-add-services-to-ticket";
 import { useUpdateTicketStatus } from "../../../http/use-update-ticket-status";
 import { ClientInfoModal } from "../client-info-modal";
+import { FormModal } from '../../components/form-modal'
+import { ConfirmButton, ServicesField, StatusField } from "../form-modal-fields";
+import { useModal } from '../../hooks/use-modal'
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -30,11 +33,13 @@ type UpdateTicketStatusFormData = z.infer<typeof updateStatusSchema>
 export function TechTicketManager() {
   const { data: ticketList } = useTechTicketList();
   const { data: serviceList } = useListServices();
-  const { mutateAsync: addServicesToTicket } = useAddServicesToTicket();
-  const { mutateAsync: updateTicketStatus } = useUpdateTicketStatus();
-  const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
-  const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
-  const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
+  const { mutateAsync: addServicesToTicket, isPending: isAddServicesPending } = useAddServicesToTicket();
+  const { mutateAsync: updateTicketStatus, isPending: isUpdateStatusPending } = useUpdateTicketStatus();
+
+  const addServiceModal = useModal();
+  const updateStatusModal = useModal();
+  const userInfoModal = useModal();
+
   const [selectedTicket, setSelectedTicket] = useState<TechTicketListData | null>(null);
   const [serviceForm] = Form.useForm<AddServiceFormData>();
   const [statusForm] = Form.useForm<UpdateTicketStatusFormData>();
@@ -59,7 +64,7 @@ export function TechTicketManager() {
       render: (_: any, ticket: TechTicketListData) => (
         <Button
           onClick={() => {
-            setIsUserInfoModalOpen(true)
+            userInfoModal.openModal()
             setSelectedTicket(ticket)
           }} 
           className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
@@ -119,7 +124,7 @@ export function TechTicketManager() {
             icon={<PlusOutlined />}
             onClick={() => {
               setSelectedTicket(ticket);
-              setIsAddServiceModalOpen(true);
+              addServiceModal.openModal()
             }}
           >
             Adicionar Serviço
@@ -131,7 +136,7 @@ export function TechTicketManager() {
             onClick={() => {
               setSelectedTicket(ticket);
               statusForm.setFieldsValue({ status: ticket.status });
-              setIsUpdateStatusModalOpen(true);
+              updateStatusModal.openModal()
             }}
           >
             Alterar Status
@@ -149,7 +154,7 @@ export function TechTicketManager() {
           servicesIds
         })
         message.success('Serviços adicionados com sucesso!');
-        setIsAddServiceModalOpen(false);
+        addServiceModal.closeModal()
         serviceForm.resetFields();
       }
   
@@ -159,7 +164,7 @@ export function TechTicketManager() {
       await updateTicketStatus({ ticketId: selectedTicket.id, status });
   
       message.success('Status atualizado com sucesso!');
-      setIsUpdateStatusModalOpen(false);
+      updateStatusModal.closeModal();
       statusForm.resetFields();
     };
 
@@ -173,100 +178,47 @@ export function TechTicketManager() {
         rowKey="id"
         pagination={{ pageSize: 10 }}
       />
-
-      <Modal
-        title="Adicionar Serviços"
-        open={isAddServiceModalOpen}
-        onCancel={() => {
-          setIsAddServiceModalOpen(false);
-          serviceForm.resetFields();
-          setSelectedTicket(null);
-        }}
-        footer={null}
-        width={500}
-      >
         {selectedTicket && (
-          <>
+          <FormModal
+            title="Adicionar Serviços"
+            open={addServiceModal.open}
+            onCancel={() => {
+              addServiceModal.closeModal()
+              serviceForm.resetFields();
+              setSelectedTicket(null);
+            }}
+            onFinish={handleAddService}
+            form={serviceForm}
+          >
             <TicketCard ticket={selectedTicket} />
-
-            <Form
-              form={serviceForm}
-              layout="vertical"
-              onFinish={handleAddService}
-            >
-              <Form.Item
-                name="servicesIds"
-                label="Serviços Adicionais"
-                rules={[{ required: true, message: 'Selecione pelo menos um serviço' }]}
-              >
-                <Select
-                  mode="multiple"
-                  placeholder="Selecione os serviços"
-                  optionFilterProp="children"
-                >
-                  {serviceList?.map(service => (
-                      <Option key={service.id} value={service.id}>
-                        {service.title} - R$ {service.price}
-                      </Option>
-                    ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item className="!mb-0">
-                <Button type="primary" htmlType="submit" block>
-                  Adicionar Serviços
-                </Button>
-              </Form.Item>
-            </Form>
-          </>
+            <ServicesField serviceList={serviceList} />
+            <ConfirmButton loading={isAddServicesPending} innerText="Adicionar Serviços" />
+          </FormModal>
         )}
-      </Modal>
 
-      <Modal
-        title="Atualizar Status do Ticket"
-        open={isUpdateStatusModalOpen}
-        onCancel={() => {
-          setIsUpdateStatusModalOpen(false);
-          statusForm.resetFields();
-          setSelectedTicket(null);
-        }}
-        footer={null}
-      >
         {selectedTicket && (
-          <>
+          <FormModal
+            title="Atualizar Status do Ticket"
+            open={updateStatusModal.open}
+            onCancel={() => {
+              setSelectedTicket(null);
+              updateStatusModal.closeModal()
+              statusForm.resetFields();
+            }}
+            onFinish={handleUpdateStatus}
+            form={statusForm}
+          >
             <TicketCard ticket={selectedTicket} />
-
-            <Form
-              form={statusForm}
-              layout="vertical"
-              onFinish={handleUpdateStatus}
-            >
-              <Form.Item
-                name="status"
-                label="Novo Status"
-                rules={[{ required: true, message: 'Selecione um status' }]}
-              >
-                <Select placeholder="Selecione o status">
-                  <Option value="aberto">Aberto</Option>
-                  <Option value="em_atendimento">Em atendimento</Option>
-                  <Option value="encerrado">Encerrado</Option>
-                </Select>
-              </Form.Item>
-
-              <Form.Item className="!mb-0">
-                <Button type="primary" htmlType="submit" block>
-                  Atualizar Status
-                </Button>
-              </Form.Item>
-            </Form>
-          </>
+            <StatusField />
+            <ConfirmButton loading={isUpdateStatusPending} innerText="Atualizar Status" />
+          </FormModal>
         )}
-      </Modal>
+        
       <ClientInfoModal
-        isClientInfoModalOpen={isUserInfoModalOpen}
+        isClientInfoModalOpen={userInfoModal.open}
         onCancel={() => {
           setSelectedTicket(null)
-          setIsUserInfoModalOpen(false)
+          userInfoModal.closeModal()
         }}
         client={selectedTicket?.client}
       />

@@ -8,6 +8,9 @@ import { useUpdateUser } from "../../../http/use-update-user";
 import { useDeleteClient } from "../../../http/use-delete-client";
 import { useUpdateUserPassword } from "../../../http/use-update-user-password";
 import { useUpdateTechAvailabilities } from "../../../http/use-update-tech-availabilities";
+import { FormModal } from "../form-modal";
+import { useModal } from "../../hooks/use-modal";
+import { AddressField, AvailabilitiesField, ConfirmButton, EmailField, NameField, PasswordField, PhoneField } from "../form-modal-fields";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -42,12 +45,14 @@ export function UserProfile({user, logout}: UserProfileProps) {
   const { mutateAsync: deleteClient, isPending: isDeletionPending } = useDeleteClient();
   const { mutateAsync: updateUserPassword, isPending: isUpdatePassPending } = useUpdateUserPassword();
   const { mutateAsync: updateTechAvailabilities, isPending: isUpdateAvPending} = useUpdateTechAvailabilities();
+  
+  const editProfileModal = useModal();
+  const updatePasswordModal = useModal();
+  const updateAvailabilitiesModal = useModal();
+
   const [profileForm] = Form.useForm<UpdateUserFormData>();
   const [passwordForm] = Form.useForm<UpdatePasswordFormData>();
   const [availabilitiesForm] = Form.useForm<UpdateAvailabilitiesFormData>();
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-  const [isUpdatePasswordModalOpen, setIsUpdatePasswordModalOpen] = useState(false);
-  const [isUpdateAvailabilitiesModalOpen, setIsUpdateAvailabilitiesModalOpen] = useState(false);
 
   const handleUpdateProfile = async ({
     newName,
@@ -66,7 +71,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
     })
 
     message.success('Perfil atualizado com sucesso!');
-    setIsEditProfileModalOpen(false);
+    editProfileModal.closeModal()
   };
 
   const handleUpdatePassword = async ({
@@ -82,7 +87,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
     });
 
     message.success("Senha atualizada com sucesso!")
-    setIsUpdatePasswordModalOpen(false);
+    updatePasswordModal.closeModal()
   }
 
   const handleDeleteAccount = async () => {
@@ -102,7 +107,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
 
     message.success("Disponibilidades alteradas com sucesso!");
     availabilitiesForm.resetFields();
-    setIsUpdateAvailabilitiesModalOpen(false);
+    updateAvailabilitiesModal.closeModal()
   }
   
 
@@ -160,14 +165,14 @@ export function UserProfile({user, logout}: UserProfileProps) {
                 newAddress: user?.address,
                 newPhone: user?.phone
               });
-              setIsEditProfileModalOpen(true);
+              editProfileModal.openModal()
             }}
           >
             Editar Perfil
           </Button>
           <Button 
             type="primary" 
-            onClick={() => setIsUpdatePasswordModalOpen(true)}
+            onClick={() => updatePasswordModal.openModal()}
           >
             Atualizar Senha
           </Button>
@@ -189,7 +194,7 @@ export function UserProfile({user, logout}: UserProfileProps) {
             <Button 
               type="primary" 
               onClick={() => {
-                setIsUpdateAvailabilitiesModalOpen(true)
+                updateAvailabilitiesModal.openModal()
                 availabilitiesForm.setFieldsValue({
                   newAvailabilities: user.availabilities
                 })
@@ -201,147 +206,45 @@ export function UserProfile({user, logout}: UserProfileProps) {
         </div>
       </Card>
 
-      <Modal
+      <FormModal
         title="Editar Perfil"
-        open={isEditProfileModalOpen}
-        onCancel={() => setIsEditProfileModalOpen(false)}
-        footer={null}
+        open={editProfileModal.open}
+        onCancel={() => editProfileModal.closeModal()}
+        onFinish={handleUpdateProfile}
+        form={profileForm}
       >
-        <Form
-          form={profileForm}
-          layout="vertical"
-          onFinish={handleUpdateProfile}
-        >
-          <Form.Item
-            name="newName"
-            label="Nome"
-            rules={[{ required: true, message: 'Por favor, insira seu nome' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newEmail"
-            label="Email"
-            rules={[{ required: true, message: 'Por favor, insira seu email' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newPhone"
-            label="Telefone"
-            rules={[{ required: true, message: 'Por favor, insira seu telefone' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newAddress"
-            label="Endereço"
-            rules={[{ required: true, message: 'Por favor, insira seu endereço' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item className="!mb-0">
-            <Button loading={isPending} type="primary" htmlType="submit" block>
-              Salvar Alterações
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <NameField name="newName" />
+        <EmailField name="newEmail" />
+        <PhoneField name="newPhone" />
+        <AddressField name="newAddress" />
+        <ConfirmButton innerText="Salvar Alterações" loading={isPending} />
+      </FormModal>
 
       {/* ATUALIZAÇÃO DE SENHA */}
-      <Modal
+      <FormModal
         title="Atualizar Senha"
-        open={isUpdatePasswordModalOpen}
-        onCancel={() => setIsUpdatePasswordModalOpen(false)}
-        footer={null}
+        open={updatePasswordModal.open}
+        onCancel={() => updatePasswordModal.closeModal()}
+        onFinish={handleUpdatePassword}
+        form={passwordForm}
       >
-        <Form
-          form={passwordForm}
-          layout="vertical"
-          onFinish={handleUpdatePassword}
-        >
-          <Form.Item
-            name="currentPassword"
-            label="Senha atual"
-            rules={[
-              { required: true, message: 'Por favor, insira a senha atual' },
-              { min: 6, message: 'A senha deve ter no mínimo 6 caracteres' }
-            ]}
-            
-          >
-            <Input.Password 
-              prefix={<LockOutlined />} 
-              placeholder="Mínimo 6 caracteres"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="newPassword"
-            label="Nova Senha"
-            rules={[
-              { required: true, message: 'Por favor, insira a nova senha' },
-              { min: 6, message: 'A senha deve ter no mínimo 6 caracteres' }
-            ]}
-          >
-            <Input.Password 
-              prefix={<LockOutlined />} 
-              placeholder="Mínimo 6 caracteres" 
-            />
-          </Form.Item>
-
-          <Form.Item className="!mb-0">
-            <Button loading={isUpdatePassPending} type="primary" htmlType="submit" block>
-              Alterar Senha
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <PasswordField name="currentPassword" />
+        <PasswordField name="newPassword" />
+        <ConfirmButton loading={isUpdatePassPending} innerText="Alterar Senha" />
+      </FormModal>
 
       {/* ATUALIZAÇÃO DE DISPONIBILIDADES DO TÉCNICO */}
 
-      <Modal
+      <FormModal
         title="Atualizar Disponibilidades"
-        open={isUpdateAvailabilitiesModalOpen}
-        onCancel={() => setIsUpdateAvailabilitiesModalOpen(false)}
-        footer={null}
+        open={updateAvailabilitiesModal.open}
+        onCancel={() => updateAvailabilitiesModal.closeModal()}
+        onFinish={handleUpdateAvailabilities}
+        form={availabilitiesForm}
       >
-        <Form
-          form={availabilitiesForm}
-          layout="vertical"
-          onFinish={handleUpdateAvailabilities}
-        >
-          <Form.Item
-            name="newAvailabilities"
-            label="Disponibilidades"
-            rules={[
-              { required: true, message: 'Por favor, insira ao menos um horário' },
-            ]}
-            
-          >
-            <Select
-              mode="multiple"
-              placeholder="Selecione as disponibilidades"
-              optionFilterProp="children"
-            >
-              {availabilities().map(availability => (
-                <Option key={availability} value={availability}>
-                  {availability}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item className="!mb-0">
-            <Button loading={isUpdateAvPending} type="primary" htmlType="submit" block>
-              Confirmar
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <AvailabilitiesField name="newAvailabilities" />
+        <ConfirmButton loading={isUpdateAvPending} />
+      </FormModal>
     </>
   )
 }

@@ -1,7 +1,6 @@
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify';
 import { useLogin } from '../../http/use-login';
 import z from 'zod';
 import Cookies from 'js-cookie'
@@ -43,7 +42,6 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] px-6">
-      <ToastContainer />
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <Title level={2} className="!mb-2">Entrar</Title>

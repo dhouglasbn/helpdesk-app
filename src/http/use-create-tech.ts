@@ -10,7 +10,9 @@ export function useCreateTech() {
 	return useMutation({
 		mutationFn: async (data: CreateUserRequest) => {
 			const token = Cookies.get("access_token");
-			if (!token) throw new Error("No token");
+			if (!token) {
+				message.error("Sua sessão de autenticação encerrou!");
+			}
 
 			const response = await fetch(`${env.VITE_API_URL}/users/tech`, {
 				method: "POST",

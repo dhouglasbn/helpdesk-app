@@ -9,6 +9,10 @@ import { env } from "../../../env";
 import { TechInfoModal } from "../tech-info-modal";
 import { useUpdateUser } from '../../../http/use-update-user';
 import { useUpdateTechAvailabilities } from "../../../http/use-update-tech-availabilities";
+import { useModal } from "../../hooks/use-modal";
+import { FormModal } from "../form-modal";
+import { AddressField, AvailabilitiesField, ConfirmButton, EmailField, NameField, PasswordField, PhoneField } from "../form-modal-fields";
+import { useUpdateUserPassword } from "../../../http/use-update-user-password";
 
 const { Title } = Typography;
 const { Option } = Select
@@ -29,10 +33,15 @@ const updateTechSchema = z.object({
 const updateTechAvailabilitiesSchema = z.object({
   newAvailabilities: z.array(z.string())
 })
+const updateTechPasswordSchema = z.object({
+  currentPassword: z.string().min(6),
+  newPassword: z.string().min(6),
+})
 
 type CreateTechFormData = z.infer<typeof createTechSchema>
 type UpdateTechFormData = z.infer<typeof updateTechSchema>
 type UpdateTechAvailabilitiesFormData = z.infer<typeof updateTechAvailabilitiesSchema>
+type UpdateTechPasswordFormData = z.infer<typeof updateTechPasswordSchema>
 
 
 export function AdminTechManager() {
@@ -40,16 +49,20 @@ export function AdminTechManager() {
   const { mutateAsync: createTechnician, isPending: isCreationPending } = useCreateTech();
   const { mutateAsync: updateTechnician, isPending: isUpdatePending } = useUpdateUser();
   const { mutateAsync: updateAvailabilities, isPending: isUpdateAvPending } = useUpdateTechAvailabilities();
-  const [isCreateTechModalOpen, setIsCreateTechModalOpen] = useState(false);
-  const [isEditTechModalOpen, setIsEditTechModalOpen] = useState(false);
-  const [isEditTechAvModalOpen, setIsEditTechAvModalOpen] = useState(false);
-  const [isTechInfoModalOpen, setIsTechInfoModalOpen] = useState(false);
+  const { mutateAsync: updatePassword, isPending: isUpdatePassPending } = useUpdateUserPassword();
   const [selectedTech, setSelectedTech] = useState<UserData | null>(null);
+
+  const createTechModal = useModal();
+  const editTechModal = useModal();
+  const editTechAvailabilitiesModal = useModal();
+  const editTechPasswordModal = useModal();
+  const techInfoModal = useModal();
+
   const [createTechForm] = Form.useForm<CreateTechFormData>();
   const [editTechForm] = Form.useForm<UpdateTechFormData>();
-  const [editTechPasswordForm] = Form.useForm<CreateTechFormData>();
+  const [editTechPasswordForm] = Form.useForm<UpdateTechPasswordFormData>();
   const [editTechAvailabilitiesForm] = Form.useForm<UpdateTechAvailabilitiesFormData>();
-
+  
 
   const handleCreateTechnician = async ({
     name,
@@ -69,7 +82,7 @@ export function AdminTechManager() {
     message.success("Conta de Técnico criada!")
     createTechForm.resetFields();
     setSelectedTech(null)
-    setIsCreateTechModalOpen(false);
+    createTechModal.closeModal()
   };
 
   const handleUpdateTechnician = async ({
@@ -91,7 +104,7 @@ export function AdminTechManager() {
     message.success("Conta de Técnico atualizada!")
     editTechForm.resetFields();
     setSelectedTech(null)
-    setIsEditTechModalOpen(false);
+    editTechModal.closeModal()
   }
 
   const handleUpdateTechAvailabilities = async ({
@@ -102,8 +115,24 @@ export function AdminTechManager() {
   
       message.success("Disponibilidades alteradas com sucesso!");
       editTechAvailabilitiesForm.resetFields();
-      setIsEditTechAvModalOpen(false);
-    }
+      editTechAvailabilitiesModal.closeModal()
+  }
+
+  const handleUpdateTechPassword = async ({
+    currentPassword,
+    newPassword
+  }: UpdateTechPasswordFormData) => {
+    if (!selectedTech) return message.error("Nenhum Técnico foi selecionado!");
+    await updatePassword({
+      userId: selectedTech.id,
+      currentPassword,
+      newPassword
+    })
+
+    message.success("Senha alterada com sucesso!");
+    editTechPasswordForm.resetFields();
+    editTechPasswordModal.closeModal()
+  }
 
   const columns = [
     {
@@ -115,7 +144,7 @@ export function AdminTechManager() {
             const techInfo = technicians?.find(t => t.id === tech.id);
             if(!techInfo) return;
             setSelectedTech(techInfo)
-            setIsTechInfoModalOpen(true);
+            techInfoModal.openModal()
           }} 
           className='flex gap-2 !items-center !p-0 !border-0 !bg-transparent !shadow-none !h-auto'>
           <Avatar
@@ -160,7 +189,7 @@ export function AdminTechManager() {
                 newPhone: tech.phone,
                 newAddress: tech.address,
               });
-              setIsEditTechModalOpen(true);
+              editTechModal.openModal()
             }}
           >
             Editar
@@ -173,7 +202,7 @@ export function AdminTechManager() {
               editTechAvailabilitiesForm.setFieldsValue({
                 newAvailabilities: tech.availabilities,
               });
-              setIsEditTechAvModalOpen(true);
+              editTechAvailabilitiesModal.openModal()
             }}
           >
             Alterar Disponibilidades
@@ -181,7 +210,10 @@ export function AdminTechManager() {
           <Button
             size="small"
             icon={<EditOutlined />}
-            onClick={() => {}}
+            onClick={() => {
+              setSelectedTech(tech)
+              editTechPasswordModal.openModal()
+            }}
           >
             Alterar Senha
           </Button>
@@ -194,9 +226,7 @@ export function AdminTechManager() {
     return `(${phoneNumber.slice(0,2)})${phoneNumber.slice(2,7)}-${phoneNumber.slice(7, 11)}`
   }
 
-  const availabilities = () => Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
+  
   
   return (
     <>
@@ -206,7 +236,7 @@ export function AdminTechManager() {
           type="primary" 
           icon={<PlusOutlined />} 
           onClick={() => {
-            setIsCreateTechModalOpen(true);
+            createTechModal.openModal()
           }}
           size="large"
         >
@@ -222,185 +252,77 @@ export function AdminTechManager() {
       />
 
       {/* CRIAR TÉCNICO */}
-      <Modal
-        title='Criar Técnico'
-        open={isCreateTechModalOpen}
+      <FormModal
+        title="Criar Técnico"
+        open={createTechModal.open}
         onCancel={() => {
-          setIsCreateTechModalOpen(false);
+          createTechModal.closeModal();
           createTechForm.resetFields();
         }}
-        footer={null}
+        onFinish={handleCreateTechnician}
+        form={createTechForm}
       >
-        <Form
-          form={createTechForm}
-          layout="vertical"
-          onFinish={handleCreateTechnician}
-        >
-          <Form.Item
-            name="name"
-            label="Nome"
-            rules={[{ required: true, message: 'Por favor, insira o nome' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Por favor, insira o email' },
-              { type: 'email', message: 'Email inválido' }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            label="Senha"
-            rules={[
-              { required: true, message: 'Por favor, insira a senha a ser repassada ao técnico' },
-              { min: 6, message: 'A senha deve ter no mínimo 6 caracteres' }
-            ]}
-            
-          >
-            <Input.Password 
-              prefix={<LockOutlined />} 
-              placeholder="Mínimo 6 caracteres"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Telefone"
-            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="address"
-            label="Endereço"
-            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0 }}>
-            <Button loading={isCreationPending} type="primary" htmlType="submit" block>
-              Confirmar
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <NameField />
+        <EmailField />
+        <PasswordField />
+        <PhoneField />
+        <AddressField />
+        <ConfirmButton loading={isCreationPending} />
+      </FormModal>
 
       {/* EDITAR TÉCNICO */}
-      <Modal
-        title='Editar Técnico'
-        open={isEditTechModalOpen}
+      <FormModal
+        title="Editar Técnico"
+        open={editTechModal.open}
         onCancel={() => {
           setSelectedTech(null)
-          setIsEditTechModalOpen(false);
+          editTechModal.closeModal()
           editTechForm.resetFields();
         }}
-        footer={null}
+        onFinish={handleUpdateTechnician}
+        form={editTechForm}
       >
-        <Form
-          form={editTechForm}
-          layout="vertical"
-          onFinish={handleUpdateTechnician}
-        >
-          <Form.Item
-            name="newName"
-            label="Nome"
-            rules={[{ required: true, message: 'Por favor, insira o nome' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newEmail"
-            label="Email"
-            rules={[
-              { required: true, message: 'Por favor, insira o email' },
-              { type: 'email', message: 'Email inválido' }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newPhone"
-            label="Telefone"
-            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="newAddress"
-            label="Endereço"
-            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item className="mb-0">
-            <Button loading={isUpdatePending} type="primary" htmlType="submit" block>
-              Confirmar
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <NameField name="newName" />
+        <EmailField name="newEmail" />
+        <PhoneField name="newPhone" />
+        <AddressField name="newAddress" />
+        <ConfirmButton loading={isUpdatePending} />
+      </FormModal>
 
       {/* ATUALIZAÇÃO DE DISPONIBILIDADES DO TÉCNICO */}
-      
-      <Modal
+      <FormModal
         title="Atualizar Disponibilidades"
-        open={isEditTechAvModalOpen}
+        open={editTechAvailabilitiesModal.open}
         onCancel={() => {
           setSelectedTech(null)
-          setIsEditTechAvModalOpen(false)
+          editTechAvailabilitiesModal.closeModal()
         }}
-        footer={null}
+        onFinish={handleUpdateTechAvailabilities}
+        form={editTechAvailabilitiesForm}
       >
-        <Form
-          form={editTechAvailabilitiesForm}
-          layout="vertical"
-          onFinish={handleUpdateTechAvailabilities}
-        >
-          <Form.Item
-            name="newAvailabilities"
-            label="Disponibilidades"
-            rules={[
-              { required: true, message: 'Por favor, insira ao menos um horário' },
-            ]}
-            
-          >
-            <Select
-              mode="multiple"
-              placeholder="Selecione as disponibilidades"
-              optionFilterProp="children"
-            >
-              {availabilities().map(availability => (
-                <Option key={availability} value={availability}>
-                  {availability}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-      
-          <Form.Item className="!mb-0">
-            <Button loading={isUpdateAvPending} type="primary" htmlType="submit" block>
-              Confirmar
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <AvailabilitiesField name="newAvailabilities" />
+        <ConfirmButton loading={isUpdateAvPending} />
+      </FormModal>
+
+      {/* ATUALIZAÇÃO DE SENHA DO TÉCNICO */}
+      <FormModal
+        title="Atualizar Senha"
+        open={editTechPasswordModal.open}
+        onCancel={() => {
+          setSelectedTech(null)
+          editTechPasswordModal.closeModal()
+        }}
+        onFinish={handleUpdateTechPassword}
+        form={editTechPasswordForm}
+      >
+        <PasswordField name="currentPassword" />
+        <PasswordField name="newPassword" />
+        <ConfirmButton loading={isUpdatePassPending} />
+      </FormModal>
 
       <TechInfoModal 
-        isTechInfoModalOpen={isTechInfoModalOpen} 
-        onCancel={() => setIsTechInfoModalOpen(false)}
+        isTechInfoModalOpen={techInfoModal.open} 
+        onCancel={() => techInfoModal.closeModal()}
         tech={selectedTech}
       />
     </>

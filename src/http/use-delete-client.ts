@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { env } from "../env";
-import type { UpdateUserRequest } from "./types/update-user-request";
 import { message } from "antd";
 import Cookies from "js-cookie";
 import type { DeleteClientRequest } from "./types/delete-client-request";
@@ -10,7 +9,9 @@ export function useDeleteClient() {
 	return useMutation({
 		mutationFn: async ({ userId }: DeleteClientRequest) => {
 			const token = Cookies.get("access_token");
-			if (!token) throw new Error("No token");
+			if (!token) {
+				message.error("Sua sessão de autenticação encerrou!");
+			}
 
 			const response = await fetch(
 				`${env.VITE_API_URL}/users/client/${userId}`,

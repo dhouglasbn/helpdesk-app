@@ -12,6 +12,9 @@ import { z } from 'zod'
 import { useCreateTicket } from "../../../http/use-create-ticket";
 import { useListServices } from "../../../http/use-list-services";
 import { TechInfoModal } from "../tech-info-modal";
+import { useModal } from '../../hooks/use-modal'
+import { FormModal } from '../../components/form-modal'
+import { ConfirmButton, ServicesField } from '../../components/form-modal-fields'
 
 
 const { Title, Paragraph } = Typography;
@@ -29,7 +32,9 @@ export function ClientTicketManager() {
   const { data: clientTicketHistory, isPending } = useClientTicketHistory();
   const { data: servicesList } = useListServices();
   const { mutateAsync: createTicket } = useCreateTicket();
-  const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState(false);
+
+  const createTicketModal = useModal()
+
   const [selectedTech, setSelectedTech] = useState<UserData | null>(null);
   const [form] = Form.useForm<CreateTicketFormData>();
 
@@ -121,142 +126,116 @@ export function ClientTicketManager() {
 
     message.success('Chamado criado com sucesso!')
     form.resetFields();
-    setIsCreateTicketModalOpen(false);
+    createTicketModal.closeModal()
   };
   
   return (
     <>
-                <div className="flex justify-between items-center mb-6">
-                  <Title level={2} className="!m-0">Meus Chamados</Title>
-                  <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
-                    onClick={() => setIsCreateTicketModalOpen(true)}
-                    size="large"
-                  >
-                    Criar Chamado
-                  </Button>
-                </div>
-                
-                {
-                  !isPending && <Table 
-                    columns={columns} 
-                    dataSource={clientTicketHistory} 
-                    rowKey="id"
-                    pagination={{ pageSize: 10 }}
-                  />
-                }
+      <div className="flex justify-between items-center mb-6">
+        <Title level={2} className="!m-0">Meus Chamados</Title>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={() => createTicketModal.openModal()}
+          size="large"
+        >
+          Criar Chamado
+        </Button>
+      </div>
+      
+      {
+        !isPending && <Table 
+          columns={columns} 
+          dataSource={clientTicketHistory} 
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
+      }
 
-                <Modal
-                  title="Criar Novo Ticket"
-                  open={isCreateTicketModalOpen}
-                  onCancel={() => {
-                    setIsCreateTicketModalOpen(false);
-                    form.resetFields();
-                  }}
-                  footer={null}
-                  width={600}
-                >
-                  <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleCreateTicket}
-                  >
-                    <Form.Item
-                      name="techId"
-                      label="Técnico responsável"
-                      rules={[{ required: true, message: 'Selecione pelo um técnico' }]}
-                    >
-                      <Select
-                        placeholder="Selecione um técnico"
-                      >
-                        {techList?.map(tech => (
-                          <Option key={tech.id} value={tech.id} label={tech.name}>
-                            <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                              
-                              {/* Header */}
-                              <Space align="center">
-                                <Avatar
-                                  size={40}
-                                  src={`${env.VITE_API_URL}${tech.picturePath}`}
-                                />
-                                <Typography.Text strong>
-                                  {tech.name}
-                                </Typography.Text>
-                              </Space>
+      <FormModal
+        title="Criar Novo Chamado"
+        open={createTicketModal.open}
+        onCancel={() => {
+          createTicketModal.closeModal();
+          form.resetFields();
+        }}
+        onFinish={handleCreateTicket}
+        form={form}
+      >
+        <Form.Item
+            name="techId"
+            label="Técnico responsável"
+            rules={[{ required: true, message: 'Selecione pelo um técnico' }]}
+          >
+            <Select
+              placeholder="Selecione um técnico"
+            >
+              {techList?.map(tech => (
+                <Option key={tech.id} value={tech.id} label={tech.name}>
+                  <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                    
+                    {/* Header */}
+                    <Space align="center">
+                      <Avatar
+                        size={40}
+                        src={`${env.VITE_API_URL}${tech.picturePath}`}
+                      />
+                      <Typography.Text strong>
+                        {tech.name}
+                      </Typography.Text>
+                    </Space>
 
-                              {/* Informações */}
-                              <Typography.Text type="secondary">
-                                {tech.email}
-                              </Typography.Text>
+                    {/* Informações */}
+                    <Typography.Text type="secondary">
+                      {tech.email}
+                    </Typography.Text>
 
-                              <Typography.Text type="secondary">
-                                {showPhoneNumber(tech.phone)}
-                              </Typography.Text>
+                    <Typography.Text type="secondary">
+                      {showPhoneNumber(tech.phone)}
+                    </Typography.Text>
 
-                              {/* Disponibilidades */}
-                              <Space wrap>
-                                {tech.availabilities?.map((availability) => (
-                                  <Tag color="green" key={availability}>
-                                    {availability}
-                                  </Tag>
-                                ))}
-                              </Space>
+                    {/* Disponibilidades */}
+                    <Space wrap>
+                      {tech.availabilities?.map((availability) => (
+                        <Tag color="green" key={availability}>
+                          {availability}
+                        </Tag>
+                      ))}
+                    </Space>
 
-                            </Space>
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
+                  </Space>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-                    <Form.Item
-                      name="servicesIds"
-                      label="Serviços Necessários"
-                      rules={[{ required: true, message: 'Selecione pelo menos um serviço' }]}
-                    >
-                      <Select
-                        mode="multiple"
-                        placeholder="Selecione os serviços"
-                        optionFilterProp="children"
-                      >
-                        {servicesList?.map(service => (
-                          <Option key={service.id} value={service.id}>
-                            {service.title} - R$ {service.price}
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
+          <ServicesField serviceList={servicesList} />
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) => prevValues.servicesIds !== currentValues.servicesIds}
+          >
+            {({ getFieldValue }) => {
+              const selectedServices = getFieldValue('servicesIds') || [];
+              const total = calculateTicketTotal(selectedServices)
+              return total !== "0" ? (
+                <Card size="small" className="mb-4 bg-gray-50">
+                  <div className="flex justify-between items-center">
+                    <span><DollarOutlined /> Total Estimado:</span>
+                    <strong className="text-lg text-blue-500">R$ {total}</strong>
+                  </div>
+                </Card>
+              ) : null;
+            }}
+          </Form.Item>
 
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prevValues, currentValues) => prevValues.servicesIds !== currentValues.servicesIds}
-                    >
-                      {({ getFieldValue }) => {
-                        const selectedServices = getFieldValue('servicesIds') || [];
-                        const total = calculateTicketTotal(selectedServices)
-                        return total !== "0" ? (
-                          <Card size="small" className="mb-4 bg-gray-50">
-                            <div className="flex justify-between items-center">
-                              <span><DollarOutlined /> Total Estimado:</span>
-                              <strong className="text-lg text-blue-500">R$ {total}</strong>
-                            </div>
-                          </Card>
-                        ) : null;
-                      }}
-                    </Form.Item>
-
-                    <Form.Item className="!mb-0">
-                      <Button type="primary" htmlType="submit" block size="large">
-                        Criar Ticket
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-                <TechInfoModal
-                  isTechInfoModalOpen={!!selectedTech}
-                  onCancel={() => setSelectedTech(null)}
-                  tech={selectedTech}
-                />
-              </>
+          <ConfirmButton loading={isPending} />
+      </FormModal>
+      
+      <TechInfoModal
+        isTechInfoModalOpen={!!selectedTech}
+        onCancel={() => setSelectedTech(null)}
+        tech={selectedTech}
+      />
+    </>
   )
 }

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useCreateTech } from "../../../http/use-create-tech";
 import { env } from "../../../env";
 import { TechInfoModal } from "../tech-info-modal";
+import { useUpdateUser } from '../../../http/use-update-user';
 
 const { Title } = Typography;
 
@@ -17,16 +18,29 @@ const createTechSchema = z.object({
 	phone: z.string().length(11),
 	address: z.string().min(5),
 })
+const updateTechSchema = z.object({
+	newName: z.string().min(3),
+	newEmail: z.email(),
+	newPhone: z.string().length(11),
+	newAddress: z.string().min(5),
+})
 
 type CreateTechFormData = z.infer<typeof createTechSchema>
+type UpdateTechFormData = z.infer<typeof updateTechSchema>
+
 
 export function AdminTechManager() {
   const { data: technicians } = useListTechs();
-  const { mutateAsync: createTechnician } = useCreateTech();
+  const { mutateAsync: createTechnician, isPending: isCreationPending } = useCreateTech();
+  const { mutateAsync: updateTechnician, isPending: isUpdatePending } = useUpdateUser();
   const [isCreateTechModalOpen, setIsCreateTechModalOpen] = useState(false);
+  const [isEditTechModalOpen, setIsEditTechModalOpen] = useState(false);
   const [isTechInfoModalOpen, setIsTechInfoModalOpen] = useState(false);
   const [selectedTech, setSelectedTech] = useState<UserData | null>(null);
   const [createTechForm] = Form.useForm<CreateTechFormData>();
+  const [editTechForm] = Form.useForm<UpdateTechFormData>();
+  const [editTechPasswordForm] = Form.useForm<CreateTechFormData>();
+  const [editTechAvailabilitiesForm] = Form.useForm<CreateTechFormData>();
 
 
   const handleCreateTechnician = async ({
@@ -48,6 +62,27 @@ export function AdminTechManager() {
     createTechForm.resetFields();
     setIsCreateTechModalOpen(false);
   };
+
+  const handleUpdateTechnician = async ({
+    newName,
+    newEmail,
+    newPhone,
+    newAddress,
+  }: UpdateTechFormData) => {
+    if (!selectedTech) return message.error("Nenhum Técnico foi selecionado para edição!")
+    await updateTechnician({
+      userId: selectedTech.id,
+      role: selectedTech.role,
+      newName,
+      newEmail,
+      newPhone,
+      newAddress,
+    })
+
+    message.success("Conta de Técnico atualizada!")
+    editTechForm.resetFields();
+    setIsEditTechModalOpen(false);
+  }
 
   const columns = [
     {
@@ -91,17 +126,37 @@ export function AdminTechManager() {
     {
       title: 'Ações',
       key: 'actions',
-      render: (_: any, record: UserData) => (
-        <Space>
+      render: (_: any, tech: UserData) => (
+        <Space className="flex flex-col items-center">
           <Button
             size="small"
             icon={<EditOutlined />}
             onClick={() => {
-              createTechForm.setFieldsValue(record);
-              setIsCreateTechModalOpen(true);
+              setSelectedTech(tech)
+              editTechForm.setFieldsValue({
+                newName: tech.name,
+                newEmail: tech.email,
+                newPhone: tech.phone,
+                newAddress: tech.address,
+              });
+              setIsEditTechModalOpen(true);
             }}
           >
             Editar
+          </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {}}
+          >
+            Alterar Disponibilidades
+          </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {}}
+          >
+            Alterar Senha
           </Button>
         </Space>
       ),
@@ -135,7 +190,7 @@ export function AdminTechManager() {
         pagination={{ pageSize: 10 }}
       />
 
-      {/* EDITAR TÉCNICO */}
+      {/* CRIAR TÉCNICO */}
       <Modal
         title='Criar Técnico'
         open={isCreateTechModalOpen}
@@ -201,7 +256,65 @@ export function AdminTechManager() {
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" block>
+            <Button loading={isCreationPending} type="primary" htmlType="submit" block>
+              Confirmar
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* EDITAR TÉCNICO */}
+      <Modal
+        title='Editar Técnico'
+        open={isEditTechModalOpen}
+        onCancel={() => {
+          setIsEditTechModalOpen(false);
+          createTechForm.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={editTechForm}
+          layout="vertical"
+          onFinish={handleUpdateTechnician}
+        >
+          <Form.Item
+            name="newName"
+            label="Nome"
+            rules={[{ required: true, message: 'Por favor, insira o nome' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="newEmail"
+            label="Email"
+            rules={[
+              { required: true, message: 'Por favor, insira o email' },
+              { type: 'email', message: 'Email inválido' }
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="newPhone"
+            label="Telefone"
+            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="newAddress"
+            label="Endereço"
+            rules={[{ required: true, message: 'Por favor, insira o telefone' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <Button loading={isUpdatePending} type="primary" htmlType="submit" block>
               Confirmar
             </Button>
           </Form.Item>

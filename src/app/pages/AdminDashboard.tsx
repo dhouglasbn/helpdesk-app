@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Table, Tag, Modal, Form, Input, Avatar, Typography, message, Popconfirm, Space, Switch, InputNumber } from 'antd';
+import { Layout, Menu, Avatar, Typography } from 'antd';
 import { 
   UserOutlined, 
   FileTextOutlined,
   ToolOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
   TeamOutlined
 } from '@ant-design/icons';
 import { useListServices } from '../../http/use-list-services'
-import type { User, Service, Ticket } from '@/app/App';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserContext';
 import { LogoutButton } from '../components/logout-button';
@@ -19,89 +15,20 @@ import { env } from '../../env';
 import { AdminTechManager } from '../components/sections/admin-tech-manager';
 import { AdminServiceManager } from '../components/sections/admin-service-manager';
 import { AdminClientManager } from '../components/sections/admin-client-manager';
+import { AdminTicketManager } from '../components/sections/admin-ticket-manager';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
-
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    clientId: '1',
-    technicianId: '2',
-    services: ['1'],
-    status: 'Aberto',
-    createdAt: '2026-01-28',
-    description: 'Preciso instalar o Office 365'
-  },
-  {
-    id: '2',
-    clientId: '1',
-    technicianId: '2',
-    services: ['2', '3'],
-    status: 'Em atendimento',
-    createdAt: '2026-01-25',
-    description: 'Computador não liga'
-  },
-  {
-    id: '3',
-    clientId: '3',
-    technicianId: '4',
-    services: ['4'],
-    status: 'Encerrado',
-    createdAt: '2026-01-20',
-    description: 'Treinamento para a equipe'
-  },
-];
 
 export default function AdminDashboard() {
   const { data: serviceList } = useListServices();
   const navigate = useNavigate();
   const {user} = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('technicians');
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
   useEffect(() => {
     if (!user || user?.role !== "admin") navigate("/", { replace: true })
   }, [user, navigate])
-
-  const ticketColumns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-    {
-      title: 'Cliente',
-      dataIndex: 'clientId',
-      key: 'clientId',
-      render: (clientId: string) => clientId
-    },
-    {
-      title: 'Técnico',
-      dataIndex: 'technicianId',
-      key: 'technicianId',
-      render: (techId: string) => techId,
-    },
-    { title: 'Descrição', dataIndex: 'description', key: 'description' },
-    {
-      title: 'Serviços',
-      dataIndex: 'services',
-      key: 'services',
-      render: (serviceIds: string[]) => serviceIds.map(id => id),
-    },
-    {
-      title: 'Total',
-      key: 'total',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        let color = 'blue';
-        if (status === 'Em atendimento') color = 'orange';
-        if (status === 'Encerrado') color = 'green';
-        return <Tag color={color}>{status}</Tag>;
-      },
-    },
-    { title: 'Data', dataIndex: 'createdAt', key: 'createdAt' },
-  ];
 
   return (
     <Layout className="min-h-screen">
@@ -142,7 +69,7 @@ export default function AdminDashboard() {
               {
                 key: 'tickets',
                 icon: <FileTextOutlined />,
-                label: 'Todos os Tickets',
+                label: 'Todos os Chamados',
               },
               {
                 key: 'profile',
@@ -161,18 +88,7 @@ export default function AdminDashboard() {
 
             {selectedMenu === 'clients' && <AdminClientManager />}
 
-            {selectedMenu === 'tickets' && (
-              <>
-                <Title level={2} className="mb-6">Todos os Tickets</Title>
-                
-                <Table 
-                  columns={ticketColumns} 
-                  dataSource={tickets} 
-                  rowKey="id"
-                  pagination={{ pageSize: 10 }}
-                />
-              </>
-            )}
+            {selectedMenu === 'tickets' && <AdminTicketManager />}
 
             {selectedMenu === 'profile' && <UserProfile user={user} />}
           </Content>

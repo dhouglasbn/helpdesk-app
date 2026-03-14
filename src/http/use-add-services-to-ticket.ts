@@ -52,6 +52,7 @@ export function useAddServicesToTicket() {
 		},
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: ["tech-ticket-list"] });
+			await queryClient.invalidateQueries({ queryKey: ["admin-ticket-list"] });
 		},
 	});
 }

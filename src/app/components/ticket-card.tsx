@@ -1,11 +1,11 @@
 import { Card, Descriptions, Space, Tag, Typography } from "antd";
 import { TicketStatusTag } from "./ticket-status-tag";
-import type { TechTicketListData } from "../../http/types/ticket-data";
+import type { AdminTicketListData, TechTicketListData } from "../../http/types/ticket-data";
 
 const { Text } = Typography
 
 interface ServiceCardProps {
-  ticket: TechTicketListData;
+  ticket: TechTicketListData | AdminTicketListData;
 }
 
 export function TicketCard({ ticket }: ServiceCardProps) {

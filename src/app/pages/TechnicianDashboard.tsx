@@ -56,7 +56,7 @@ export default function TechnicianDashboard() {
               {
                 key: 'tickets',
                 icon: <FileTextOutlined />,
-                label: 'Chamados Atribuídos',
+                label: 'Chamados Solicitados',
               },
               {
                 key: 'profile',

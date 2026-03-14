@@ -9,7 +9,8 @@ interface UserInfoModalProps {
   isUserInfoModalOpen: boolean
   onCancel: () => void
   user: UserData | null,
-  updatable?: boolean
+  updatable?: boolean,
+  loading?: boolean
 }
 
 
@@ -18,6 +19,7 @@ export function UserInfoModal({
   onCancel,
   user,
   updatable,
+  loading,
 }: UserInfoModalProps) {
   if (!user) return null;
 
@@ -31,6 +33,7 @@ export function UserInfoModal({
       open={isUserInfoModalOpen}
       onCancel={onCancel}
       footer={null}
+      loading={loading}
     >
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         

@@ -1,5 +1,5 @@
 import { EditOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
-import { Avatar, Button, Form, Input, message, Modal, Space, Table, Tag, Typography } from "antd";
+import { Avatar, Button, Form, Input, message, Modal, Select, Space, Table, Tag, Typography } from "antd";
 import { useState } from "react";
 import type { UserData } from "../../../http/types/userData";
 import { useListTechs } from "../../../http/use-list-techs";
@@ -8,8 +8,10 @@ import { useCreateTech } from "../../../http/use-create-tech";
 import { env } from "../../../env";
 import { TechInfoModal } from "../tech-info-modal";
 import { useUpdateUser } from '../../../http/use-update-user';
+import { useUpdateTechAvailabilities } from "../../../http/use-update-tech-availabilities";
 
 const { Title } = Typography;
+const { Option } = Select
 
 const createTechSchema = z.object({
 	name: z.string().min(3),
@@ -24,23 +26,29 @@ const updateTechSchema = z.object({
 	newPhone: z.string().length(11),
 	newAddress: z.string().min(5),
 })
+const updateTechAvailabilitiesSchema = z.object({
+  newAvailabilities: z.array(z.string())
+})
 
 type CreateTechFormData = z.infer<typeof createTechSchema>
 type UpdateTechFormData = z.infer<typeof updateTechSchema>
+type UpdateTechAvailabilitiesFormData = z.infer<typeof updateTechAvailabilitiesSchema>
 
 
 export function AdminTechManager() {
   const { data: technicians } = useListTechs();
   const { mutateAsync: createTechnician, isPending: isCreationPending } = useCreateTech();
   const { mutateAsync: updateTechnician, isPending: isUpdatePending } = useUpdateUser();
+  const { mutateAsync: updateAvailabilities, isPending: isUpdateAvPending } = useUpdateTechAvailabilities();
   const [isCreateTechModalOpen, setIsCreateTechModalOpen] = useState(false);
   const [isEditTechModalOpen, setIsEditTechModalOpen] = useState(false);
+  const [isEditTechAvModalOpen, setIsEditTechAvModalOpen] = useState(false);
   const [isTechInfoModalOpen, setIsTechInfoModalOpen] = useState(false);
   const [selectedTech, setSelectedTech] = useState<UserData | null>(null);
   const [createTechForm] = Form.useForm<CreateTechFormData>();
   const [editTechForm] = Form.useForm<UpdateTechFormData>();
   const [editTechPasswordForm] = Form.useForm<CreateTechFormData>();
-  const [editTechAvailabilitiesForm] = Form.useForm<CreateTechFormData>();
+  const [editTechAvailabilitiesForm] = Form.useForm<UpdateTechAvailabilitiesFormData>();
 
 
   const handleCreateTechnician = async ({
@@ -60,6 +68,7 @@ export function AdminTechManager() {
     
     message.success("Conta de Técnico criada!")
     createTechForm.resetFields();
+    setSelectedTech(null)
     setIsCreateTechModalOpen(false);
   };
 
@@ -81,8 +90,20 @@ export function AdminTechManager() {
 
     message.success("Conta de Técnico atualizada!")
     editTechForm.resetFields();
+    setSelectedTech(null)
     setIsEditTechModalOpen(false);
   }
+
+  const handleUpdateTechAvailabilities = async ({
+      newAvailabilities
+    }: UpdateTechAvailabilitiesFormData) => {
+      if (!selectedTech) return message.error("Nenhum Técnico foi selecionado!");
+      await updateAvailabilities({techId: selectedTech.id, newAvailabilities});
+  
+      message.success("Disponibilidades alteradas com sucesso!");
+      editTechAvailabilitiesForm.resetFields();
+      setIsEditTechAvModalOpen(false);
+    }
 
   const columns = [
     {
@@ -147,7 +168,13 @@ export function AdminTechManager() {
           <Button
             size="small"
             icon={<EditOutlined />}
-            onClick={() => {}}
+            onClick={() => {
+              setSelectedTech(tech)
+              editTechAvailabilitiesForm.setFieldsValue({
+                newAvailabilities: tech.availabilities,
+              });
+              setIsEditTechAvModalOpen(true);
+            }}
           >
             Alterar Disponibilidades
           </Button>
@@ -166,6 +193,10 @@ export function AdminTechManager() {
   const showPhoneNumber = (phoneNumber: string) => {
     return `(${phoneNumber.slice(0,2)})${phoneNumber.slice(2,7)}-${phoneNumber.slice(7, 11)}`
   }
+
+  const availabilities = () => Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
   
   return (
     <>
@@ -268,8 +299,9 @@ export function AdminTechManager() {
         title='Editar Técnico'
         open={isEditTechModalOpen}
         onCancel={() => {
+          setSelectedTech(null)
           setIsEditTechModalOpen(false);
-          createTechForm.resetFields();
+          editTechForm.resetFields();
         }}
         footer={null}
       >
@@ -315,6 +347,51 @@ export function AdminTechManager() {
 
           <Form.Item className="mb-0">
             <Button loading={isUpdatePending} type="primary" htmlType="submit" block>
+              Confirmar
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ATUALIZAÇÃO DE DISPONIBILIDADES DO TÉCNICO */}
+      
+      <Modal
+        title="Atualizar Disponibilidades"
+        open={isEditTechAvModalOpen}
+        onCancel={() => {
+          setSelectedTech(null)
+          setIsEditTechAvModalOpen(false)
+        }}
+        footer={null}
+      >
+        <Form
+          form={editTechAvailabilitiesForm}
+          layout="vertical"
+          onFinish={handleUpdateTechAvailabilities}
+        >
+          <Form.Item
+            name="newAvailabilities"
+            label="Disponibilidades"
+            rules={[
+              { required: true, message: 'Por favor, insira ao menos um horário' },
+            ]}
+            
+          >
+            <Select
+              mode="multiple"
+              placeholder="Selecione as disponibilidades"
+              optionFilterProp="children"
+            >
+              {availabilities().map(availability => (
+                <Option key={availability} value={availability}>
+                  {availability}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+      
+          <Form.Item className="!mb-0">
+            <Button loading={isUpdateAvPending} type="primary" htmlType="submit" block>
               Confirmar
             </Button>
           </Form.Item>

@@ -12,7 +12,7 @@ import { useListServices } from "../../../http/use-list-services";
 import { useAddServicesToTicket } from "../../../http/use-add-services-to-ticket";
 import { useUpdateTicketStatus } from "../../../http/use-update-ticket-status";
 import { FormModal } from '../../components/form-modal'
-import { ConfirmButton, ServicesField, StatusField } from "../form-modal-fields";
+import { ConfirmButton, ServicesField, TicketStatusField } from "../form-modal-fields";
 import { useModal } from '../../hooks/use-modal'
 import { UserInfoModal } from "../user-info-modal";
 
@@ -209,7 +209,7 @@ export function TechTicketManager() {
             form={statusForm}
           >
             <TicketCard ticket={selectedTicket} />
-            <StatusField />
+            <TicketStatusField />
             <ConfirmButton loading={isUpdateStatusPending} innerText="Atualizar Status" />
           </FormModal>
         )}

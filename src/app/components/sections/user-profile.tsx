@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Modal, Card, Descriptions, Popconfirm, Typography, Form, Input, message, Tag, Select } from "antd";
 import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
-import type { UserData } from '../../../http/types/userData';
+import type { UserData } from '../../../http/types/user-data';
 import { AvatarUploader } from "../avatar-uploader";
 import { z } from 'zod';
 import { useUpdateUser } from "../../../http/use-update-user";

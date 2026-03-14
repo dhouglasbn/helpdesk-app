@@ -1,6 +1,6 @@
 import { Avatar, Descriptions, Divider, Modal, Space, Tag, Typography } from "antd";
 import { env } from "../../env";
-import type { UserData } from "../../http/types/userData";
+import type { UserData } from "../../http/types/user-data";
 import { AvatarUploader } from "./avatar-uploader";
 
 const { Title, Text } = Typography;

@@ -3,7 +3,7 @@ import { CameraOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
 import type { UploadFile, UploadProps } from "antd";
 import { useState } from "react";
-import type { UserData } from '../../http/types/userData'
+import type { UserData } from '../../http/types/user-data'
 import { env } from "../../env";
 import type { RcFile } from "antd/es/upload";
 import { useUpdatePicture } from "../../http/use-update-picture";

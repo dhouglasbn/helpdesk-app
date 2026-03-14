@@ -1,7 +1,7 @@
 import { EditOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
 import { Avatar, Button, Form, Input, message, Modal, Select, Space, Table, Tag, Typography } from "antd";
 import { useState } from "react";
-import type { UserData } from "../../../http/types/userData";
+import type { UserData } from "../../../http/types/user-data";
 import { useListTechs } from "../../../http/use-list-techs";
 import { z } from 'zod'
 import { useCreateTech } from "../../../http/use-create-tech";

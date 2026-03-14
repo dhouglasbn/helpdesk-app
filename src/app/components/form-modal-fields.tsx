@@ -1,5 +1,5 @@
 import { LockOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Select } from "antd";
+import { Button, Form, Input, InputNumber, Select } from "antd";
 import type { ServiceData } from "../../http/types/service-data";
 
 const { Option } = Select;
@@ -126,7 +126,7 @@ export const ServicesField = ({ name = "servicesIds", serviceList }: ServicesFie
   </Form.Item>
 )
 
-export const StatusField = ({name = "status"}: FieldProps) => (
+export const TicketStatusField = ({name = "status"}: FieldProps) => (
   <Form.Item
     name={name}
     label="Status"
@@ -139,6 +139,36 @@ export const StatusField = ({name = "status"}: FieldProps) => (
     </Select>
   </Form.Item>
 )
+
+export const TitleField = ({
+  name = "title",
+}: FieldProps) => (
+  <Form.Item
+    name={name}
+    label="Título"
+    rules={[{ required: true, message: "Insira o título" }]}
+  >
+    <Input placeholder="Digite o título" />
+  </Form.Item>
+);
+
+export const PriceField = ({
+  name = "price",
+}: FieldProps) => (
+  <Form.Item
+    name={name}
+    label="Preço (R$)"
+    rules={[{ required: true, message: 'Por favor, insira o preço' }]}
+  >
+    <InputNumber
+      style={{ width: '100%' }}
+      min={0}
+      precision={2}
+      formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+      parser={value => value!.replace(/R\$\s?|(,*)/g, '') as any}
+    />
+  </Form.Item>
+);
 
 export const ConfirmButton = ({ loading, innerText = "Confirmar" }: FormButtonProps) => (
   <Form.Item className="!mb-0">

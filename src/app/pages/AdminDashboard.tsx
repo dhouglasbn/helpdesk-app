@@ -9,6 +9,7 @@ import {
   DeleteOutlined,
   TeamOutlined
 } from '@ant-design/icons';
+import { useListServices } from '../../http/use-list-services'
 import type { User, Service, Ticket } from '@/app/App';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/UserContext';
@@ -16,6 +17,7 @@ import { LogoutButton } from '../components/logout-button';
 import { UserProfile } from '../components/sections/user-profile';
 import { env } from '../../env';
 import { AdminTechManager } from '../components/sections/admin-tech-manager';
+import { AdminServiceManager } from '../components/sections/admin-service-manager';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
@@ -65,119 +67,23 @@ const mockTickets: Ticket[] = [
 ];
 
 export default function AdminDashboard() {
+  const { data: serviceList } = useListServices();
   const navigate = useNavigate();
   const {user} = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('technicians');
   const [clients, setClients] = useState<User[]>(mockClients);
-  const [services, setServices] = useState<Service[]>(mockServices);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
   useEffect(() => {
     if (!user || user?.role !== "admin") navigate("/", { replace: true })
   }, [user, navigate])
   
-  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  
-  const [serviceForm] = Form.useForm();
-
-  const getServiceById = (id: string) => services.find(s => s.id === id);
   const getClientById = (id: string) => clients.find(c => c.id === id);
-
-  const calculateTicketTotal = (serviceIds: string[]) => {
-    return serviceIds.reduce((total, id) => {
-      const service = getServiceById(id);
-      return total + (service?.price || 0);
-    }, 0);
-  };
-
-  // Service CRUD
-  const handleSaveService = (values: any) => {
-    if (editingService) {
-      setServices(services.map(s => s.id === editingService.id ? { ...s, ...values } : s));
-      message.success('Serviço atualizado com sucesso!');
-    } else {
-      const newService: Service = {
-        id: String(services.length + 1),
-        ...values,
-      };
-      setServices([...services, newService]);
-      message.success('Serviço criado com sucesso!');
-    }
-    setIsServiceModalOpen(false);
-    setEditingService(null);
-    serviceForm.resetFields();
-  };
-
-  const handleDeleteService = (id: string) => {
-    setServices(services.filter(s => s.id !== id));
-    message.success('Serviço excluído com sucesso!');
-  };
-
-  const handleToggleServiceStatus = (id: string, active: boolean) => {
-    setServices(services.map(s => s.id === id ? { ...s, active } : s));
-    message.success(`Serviço ${active ? 'ativado' : 'desativado'} com sucesso!`);
-  };
 
   const handleDeleteClient = (id: string) => {
     setClients(clients.filter(c => c.id !== id));
     message.success('Cliente excluído com sucesso!');
   };
-
-  const serviceColumns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-    { title: 'Nome', dataIndex: 'name', key: 'name' },
-    { title: 'Descrição', dataIndex: 'description', key: 'description' },
-    { 
-      title: 'Preço', 
-      dataIndex: 'price', 
-      key: 'price',
-      render: (price: number) => `R$ ${price.toFixed(2)}`
-    },
-    {
-      title: 'Status',
-      dataIndex: 'active',
-      key: 'active',
-      render: (active: boolean, record: Service) => (
-        <Switch
-          checked={active}
-          onChange={(checked) => handleToggleServiceStatus(record.id, checked)}
-          checkedChildren="Ativo"
-          unCheckedChildren="Inativo"
-        />
-      ),
-    },
-    {
-      title: 'Ações',
-      key: 'actions',
-      render: (_: any, record: Service) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingService(record);
-              serviceForm.setFieldsValue(record);
-              setIsServiceModalOpen(true);
-            }}
-          >
-            Editar
-          </Button>
-          <Popconfirm
-            title="Excluir serviço"
-            description="Tem certeza que deseja excluir este serviço?"
-            onConfirm={() => handleDeleteService(record.id)}
-            okText="Sim"
-            cancelText="Não"
-          >
-            <Button size="small" danger icon={<DeleteOutlined />}>
-              Excluir
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
 
   const clientColumns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
@@ -225,19 +131,13 @@ export default function AdminDashboard() {
       key: 'services',
       render: (serviceIds: string[]) => (
         <>
-          {serviceIds.map(serviceId => {
-            const service = getServiceById(serviceId);
-            return service ? <Tag key={serviceId}>{service.name}</Tag> : null;
-          })}
+          {}
         </>
       ),
     },
     {
       title: 'Total',
       key: 'total',
-      render: (_: any, record: Ticket) => (
-        <span>R$ {calculateTicketTotal(record.services).toFixed(2)}</span>
-      ),
     },
     {
       title: 'Status',
@@ -307,94 +207,7 @@ export default function AdminDashboard() {
           <Content className="bg-white p-6 min-h-[280px]">
             {selectedMenu === 'technicians' && <AdminTechManager />}
 
-            {selectedMenu === 'services' && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <Title level={2} className="!m-0">Gerenciar Serviços</Title>
-                  <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
-                    onClick={() => {
-                      setEditingService(null);
-                      serviceForm.resetFields();
-                      setIsServiceModalOpen(true);
-                    }}
-                    size="large"
-                  >
-                    Adicionar Serviço
-                  </Button>
-                </div>
-                
-                <Table 
-                  columns={serviceColumns} 
-                  dataSource={services} 
-                  rowKey="id"
-                  pagination={{ pageSize: 10 }}
-                />
-
-                <Modal
-                  title={editingService ? 'Editar Serviço' : 'Adicionar Serviço'}
-                  open={isServiceModalOpen}
-                  onCancel={() => {
-                    setIsServiceModalOpen(false);
-                    setEditingService(null);
-                    serviceForm.resetFields();
-                  }}
-                  footer={null}
-                >
-                  <Form
-                    form={serviceForm}
-                    layout="vertical"
-                    onFinish={handleSaveService}
-                    initialValues={{ active: true }}
-                  >
-                    <Form.Item
-                      name="name"
-                      label="Nome do Serviço"
-                      rules={[{ required: true, message: 'Por favor, insira o nome' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="description"
-                      label="Descrição"
-                      rules={[{ required: true, message: 'Por favor, insira a descrição' }]}
-                    >
-                      <TextArea rows={3} />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="price"
-                      label="Preço (R$)"
-                      rules={[{ required: true, message: 'Por favor, insira o preço' }]}
-                    >
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        precision={2}
-                        formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        parser={value => value!.replace(/R\$\s?|(,*)/g, '') as any}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="active"
-                      label="Status"
-                      valuePropName="checked"
-                    >
-                      <Switch checkedChildren="Ativo" unCheckedChildren="Inativo" />
-                    </Form.Item>
-
-                    <Form.Item style={{ marginBottom: 0 }}>
-                      <Button type="primary" htmlType="submit" block>
-                        {editingService ? 'Atualizar' : 'Criar'}
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </>
-            )}
+            {selectedMenu === 'services' && <AdminServiceManager serviceList={serviceList} />}
 
             {selectedMenu === 'clients' && (
               <>

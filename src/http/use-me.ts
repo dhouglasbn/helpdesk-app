@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { env } from "../env";
-import type { UserData } from "./types/userData";
+import type { UserData } from "./types/user-data";
 import Cookies from "js-cookie";
 import { message } from "antd";
 

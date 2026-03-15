@@ -30,7 +30,7 @@ type AddServiceFormData = z.infer<typeof addServiceSchema>
 type UpdateTicketStatusFormData = z.infer<typeof updateStatusSchema>
 
 export function TechTicketManager() {
-  const { data: ticketList } = useTechTicketList();
+  const { data: ticketList, isPending: isTicketListPending } = useTechTicketList();
   const { data: serviceList } = useListServices();
   const { mutateAsync: addServicesToTicket, isPending: isAddServicesPending } = useAddServicesToTicket();
   const { mutateAsync: updateTicketStatus, isPending: isUpdateStatusPending } = useUpdateTicketStatus();
@@ -172,6 +172,7 @@ export function TechTicketManager() {
       <Title level={2} className="mb-6">Chamados Solicitados</Title>
                 
       <Table 
+        loading={isTicketListPending}
         columns={columns} 
         dataSource={ticketList} 
         rowKey="id"

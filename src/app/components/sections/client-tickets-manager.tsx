@@ -142,14 +142,13 @@ export function ClientTicketManager() {
         </Button>
       </div>
       
-      {
-        !isPending && <Table 
+      <Table 
+          loading={isPending}
           columns={columns} 
           dataSource={clientTicketHistory} 
           rowKey="id"
           pagination={{ pageSize: 10 }}
         />
-      }
 
       <FormModal
         title="Criar Novo Chamado"

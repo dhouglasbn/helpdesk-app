@@ -124,10 +124,6 @@ export function UserProfile({user, logout}: UserProfileProps) {
     return `(${phoneNumber?.slice(0,2)})${phoneNumber?.slice(2,7)}-${phoneNumber?.slice(7, 11)}`
   }
 
-  const availabilities = () => Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
-
   return (
     <>
       <Title level={2} className="mb-6">Meu Perfil</Title>

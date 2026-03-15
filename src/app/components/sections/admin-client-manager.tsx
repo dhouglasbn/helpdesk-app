@@ -31,7 +31,7 @@ type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>
 
 
 export function AdminClientManager() {
-  const { data: clients } = useListClients();
+  const { data: clients, isPending: isClientListPending } = useListClients();
   const { mutateAsync: updateClient, isPending: isUpdatePending } = useUpdateUser();
   const { mutateAsync: updatePassword, isPending: isUpdatePassPending } = useUpdateUserPassword();
   const { mutateAsync: deleteClient, isPending: isDeletionPending } = useDeleteClient();
@@ -180,6 +180,7 @@ export function AdminClientManager() {
       </div>
                 
       <Table 
+        loading={isClientListPending}
         columns={columns} 
         dataSource={clients} 
         rowKey="id"

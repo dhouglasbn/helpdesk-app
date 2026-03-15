@@ -45,7 +45,7 @@ type UpdateTechPasswordFormData = z.infer<typeof updateTechPasswordSchema>
 
 
 export function AdminTechManager() {
-  const { data: technicians } = useListTechs();
+  const { data: technicians, isPending: isTechListPending } = useListTechs();
   const { mutateAsync: createTechnician, isPending: isCreationPending } = useCreateTech();
   const { mutateAsync: updateTechnician, isPending: isUpdatePending } = useUpdateUser();
   const { mutateAsync: updateAvailabilities, isPending: isUpdateAvPending } = useUpdateTechAvailabilities();
@@ -245,6 +245,7 @@ export function AdminTechManager() {
       </div>
                 
       <Table 
+        loading={isTechListPending}
         columns={columns} 
         dataSource={technicians} 
         rowKey="id"

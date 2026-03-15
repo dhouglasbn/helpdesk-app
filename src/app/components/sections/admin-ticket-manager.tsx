@@ -1,6 +1,5 @@
 import { Avatar, Button, Form, message, Space, Table, Tag, Typography } from "antd";
 import type { ServiceData } from "../../../http/types/service-data";
-import type { TechTicketListData } from "../../../http/types/ticket-data";
 import { useState } from "react";
 import { env } from "../../../env";
 import { TicketStatusTag } from "../ticket-status-tag";
@@ -15,7 +14,7 @@ import { FormModal } from '../form-modal'
 import { ConfirmButton, ServicesField, TicketStatusField } from "../form-modal-fields";
 import { useModal } from '../../hooks/use-modal'
 import { UserInfoModal } from "../user-info-modal";
-import { AdminTicketListData } from '../../../http/types/ticket-data'
+import type { AdminTicketListData } from '../../../http/types/ticket-data'
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetUser } from "../../../http/use-get-user";
 
@@ -35,7 +34,7 @@ type UpdateTicketStatusFormData = z.infer<typeof updateStatusSchema>
 export function AdminTicketManager() {
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const queryClient = useQueryClient();
-  const { data: ticketList } = useAdminTicketList();
+  const { data: ticketList, isPending: isTicketListPending } = useAdminTicketList();
   const { data: serviceList } = useListServices();
   const { data: selectedUser, isPending: loadingUser } = useGetUser(selectedUserId);
   const { mutateAsync: addServicesToTicket, isPending: isAddServicesPending } = useAddServicesToTicket();
@@ -197,6 +196,7 @@ export function AdminTicketManager() {
       <Title level={2} className="mb-6">Chamados</Title>
                 
       <Table 
+        loading={isTicketListPending}
         columns={columns} 
         dataSource={ticketList} 
         rowKey="id"

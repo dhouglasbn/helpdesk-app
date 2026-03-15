@@ -216,8 +216,8 @@ export function AdminClientManager() {
         onFinish={handleUpdateClientPassword}
         form={editClientPasswordForm}
       >
-        <PasswordField name="currentPassword" />
-        <PasswordField name="newPassword" />
+        <PasswordField name="currentPassword" label="Senha Atual" />
+        <PasswordField name="newPassword" label="Nova Senha" />
         <ConfirmButton loading={isUpdatePassPending} />
       </FormModal>
 

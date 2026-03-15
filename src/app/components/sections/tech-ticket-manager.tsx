@@ -197,7 +197,7 @@ export function TechTicketManager() {
 
         {selectedTicket && (
           <FormModal
-            title="Atualizar Status do Ticket"
+            title="Atualizar Status do Chamado"
             open={updateStatusModal.open}
             onCancel={() => {
               setSelectedTicket(null);

@@ -226,8 +226,8 @@ export function UserProfile({user, logout}: UserProfileProps) {
         onFinish={handleUpdatePassword}
         form={passwordForm}
       >
-        <PasswordField name="currentPassword" />
-        <PasswordField name="newPassword" />
+        <PasswordField name="currentPassword" label="Senha Atual" />
+        <PasswordField name="newPassword" label="Nova Senha" />
         <ConfirmButton loading={isUpdatePassPending} innerText="Alterar Senha" />
       </FormModal>
 

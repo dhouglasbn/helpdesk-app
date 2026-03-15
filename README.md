@@ -1,6 +1,17 @@
-# HelpDesk Pro
+<h1 align="center">
+  <br>
+  HelpDesk Pro
+</h1>
 
-HelpDesk Pro is a role-based helpdesk experience that connects clients, technicians, and administrators in a single React application. Clients open support tickets and monitor progress, technicians add services and update statuses, and admins orchestrate the entire operation—each through dedicated, responsive dashboards built with Ant Design.
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License MIT">
+  </a>
+</p>
+</h1>
+<img src="./docs/screenshots/landing.png" alt="LandingPage">
+
+---
 
 ## Features
 
@@ -31,21 +42,6 @@ HelpDesk Pro is a role-based helpdesk experience that connects clients, technici
 - **React Router** for multi-page routing between landing, auth, and dashboards.
 - **Zod** for schema validation, including strict environment validation in `src/env.ts`.
 - **JS Cookie** to persist authentication tokens securely.
-
-## Project Structure
-```text
-src/
-├── app/
-│   ├── App.tsx                 # Router + providers (QueryClient, Auth)
-│   ├── components/             # Reusable UI (modals, buttons, sections)
-│   ├── context/UserContext.tsx # Auth provider wrapping hooks and cookies
-│   ├── hooks/                  # UI-level state helpers (modals, forms)
-│   └── pages/                  # Landing, SignIn/SignUp, and role dashboards
-├── http/                       # TanStack Query hooks for API operations
-├── env.ts                      # Zod-validated access to Vite env values
-├── styles/                     # Global and page-level stylesheets
-└── main.tsx                    # Entry point mounting <App />
-```
 
 ## Getting Started
 1. **Prerequisites**
@@ -85,11 +81,9 @@ src/
 - `npm run dev` – start Vite in development mode with hot module reload.
 - `npm run build` – generate an optimized production bundle.
 
-## Screenshots
-![HelpDesk Pro landing page](docs/screenshots/landing.png)
-
 ## Contributing
 Pull requests are welcome! Please align with the existing coding style (TypeScript + React), keep forms and API mutations within the established hook patterns, and consider adding tests or storybook entries for new components.
 
-## License
-No license has been specified yet. Add the license that best fits your desired distribution model before publishing the repository.
+## 📄 License
+
+[MIT License](https://opensource.org/licenses/MIT)

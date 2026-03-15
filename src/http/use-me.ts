@@ -9,9 +9,7 @@ export function useMe() {
 		queryKey: ["me"],
 		queryFn: async () => {
 			const token = Cookies.get("access_token");
-			if (!token) {
-				message.error("Sua sessão de autenticação encerrou!");
-			}
+			if (!token) return;
 
 			const response = await fetch(`${env.VITE_API_URL}/users/me`, {
 				headers: {
